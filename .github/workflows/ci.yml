@@ -27,3 +27,23 @@ jobs:
         run: unalloc report --fixtures --dimension team
       - name: Verify the built wheel ships its fixtures
         run: make check-wheel
+
+  case-studies:
+    # The pure-Python studies, at smoke size. They exercise the real adapters
+    # end to end (including live mock provider APIs), so a broken fetch path
+    # or pagination regression fails here even when unit tests pass. The
+    # PyTorch studies need `.[research]` and run in the dev container instead.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: KV-cache serving simulator
+        run: python -m case_studies.kv_cache --quick --out .cache/quick/kv_cache
+      - name: End to end against mock provider APIs
+        run: python -m case_studies.hybrid_e2e --quick --out .cache/quick/hybrid_e2e
+      - name: Use cases
+        run: python -m case_studies.use_cases --quick --out .cache/quick/use_cases

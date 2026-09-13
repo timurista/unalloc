@@ -1,0 +1,19 @@
+{
+  "name": "unalloc",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [8765, 8888],
+  "portsAttributes": {
+    "8765": { "label": "unalloc UI" },
+    "8888": { "label": "Jupyter" }
+  },
+  "postCreateCommand": "pip install --no-deps -e . && make check",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "charliermarsh.ruff", "ms-toolsai.jupyter"],
+      "settings": { "python.defaultInterpreterPath": "/usr/local/bin/python" }
+    }
+  }
+}

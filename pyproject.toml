@@ -29,6 +29,18 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11"]
+# Case studies, notebook and paper build. Not needed to use the CLI.
+research = [
+  "torch>=2.3",
+  "numpy>=1.26",
+  "matplotlib>=3.8",
+  "typst>=0.13",
+  "nbclient>=0.10",
+  "nbformat>=5.10",
+  "ipykernel>=6.29",
+  "jupyterlab>=4.2",
+  "psycopg[binary]>=3.2",
+]
 
 [project.urls]
 Homepage = "https://github.com/timurista/unalloc"
@@ -43,10 +55,14 @@ packages = ["src/unalloc"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# The notebook is generated from case_studies/notebook_exec.py, which is linted.
+extend-exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 ignore = ["B008"]
+# Figure labels use real typographic signs ("36×", "÷").
+allowed-confusables = ["×", "÷"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

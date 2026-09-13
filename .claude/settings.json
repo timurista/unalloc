@@ -1,11 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cp -R /private/tmp/claude-501/-Users-timurista-projects-unalloc/caddf39a-8e7a-4d9f-9b81-0e6146e0659c/scratchpad/tar/unalloc /private/tmp/claude-501/-Users-timurista-projects-unalloc/caddf39a-8e7a-4d9f-9b81-0e6146e0659c/scratchpad/testrun)",
+      "Bash(make *)",
+      "Bash(unalloc *)",
+      "Bash(pytest*)",
+      "Bash(ruff *)",
+      "Bash(python -m case_studies*)",
+      "Bash(python -m paper*)",
+      "Bash(python -m pytest*)",
+      "Bash(pip install *)",
       "Bash(uv venv *)",
       "Bash(uv pip *)",
-      "Bash(.venv/bin/ruff check *)",
-      "Bash(research-venv/bin/python -c \"import torch, numpy, matplotlib, typst; print\\(torch.__version__, numpy.__version__, matplotlib.__version__\\)\")"
+      "Bash(.venv/bin/*)",
+      "Bash(docker compose -f .devcontainer/docker-compose.yml *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
     ]
   }
 }

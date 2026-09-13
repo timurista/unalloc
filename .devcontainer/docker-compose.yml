@@ -1,0 +1,44 @@
+# Dev stack: an isolated workspace container plus a small Postgres that backs
+# the mock LiteLLM spend-log store in case_studies/hybrid_e2e (LiteLLM itself
+# keeps spend logs in Postgres). Nothing here is needed to use unalloc.
+#
+#   docker compose -f .devcontainer/docker-compose.yml up -d --build
+#   docker compose -f .devcontainer/docker-compose.yml exec dev make check
+name: unalloc-dev
+
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    command: sleep infinity
+    working_dir: /workspace
+    volumes:
+      - ..:/workspace:cached
+      # Keep container-built artefacts out of the host checkout.
+      - dev-cache:/workspace/.cache
+    environment:
+      UNALLOC_CASE_PG_DSN: postgresql://unalloc:unalloc@postgres:5432/unalloc
+    ports:
+      - "8765:8765" # case_studies.ui
+      - "8888:8888" # jupyter
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: unalloc
+      POSTGRES_PASSWORD: unalloc
+      POSTGRES_DB: unalloc
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unalloc"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    tmpfs:
+      - /var/lib/postgresql/data
+
+volumes:
+  dev-cache:
