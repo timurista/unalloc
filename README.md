@@ -52,6 +52,27 @@ pip install unalloc          # or: uv tool install unalloc
 unalloc report --fixtures    # works immediately, no infrastructure needed
 ```
 
+From a clone:
+
+```bash
+make dev      # editable install with test + lint tooling
+make demo     # all three commands against bundled fixtures
+make check    # ruff + pytest, same as CI
+```
+
+Or as a container, which needs no Python on the host:
+
+```bash
+docker build -t unalloc:0.1.0 .
+docker run --rm unalloc:0.1.0 report --fixtures -D team
+
+# against real systems, reachable from the container
+docker run --rm --network host --env-file .env unalloc:0.1.0 report -D team
+```
+
+Copy `.env.example` to `.env` for the source configuration. unalloc stores
+nothing: no database, no state directory, no cached credentials.
+
 ## Usage
 
 ```bash
