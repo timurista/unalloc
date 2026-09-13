@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unalloc"
-version = "0.1.0"
+version = "0.2.0"
 description = "Find the AI spend nobody owns. Joins OpenCost allocation data with LLM provider bills and reports what's unattributed."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -45,12 +45,20 @@ research = [
 [project.urls]
 Homepage = "https://github.com/timurista/unalloc"
 Issues = "https://github.com/timurista/unalloc/issues"
+Changelog = "https://github.com/timurista/unalloc/blob/main/CHANGELOG.md"
+Paper = "https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf"
+Explorer = "https://timurista.github.io/unalloc/"
 
 [project.scripts]
 unalloc = "unalloc.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/unalloc"]
+
+# Keep the sdist to the library: case studies, paper, blog and results live in
+# the repository, not in the package users install.
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests/*.py", "README.md", "LICENSE", "CHANGELOG.md", "pyproject.toml"]
 
 [tool.ruff]
 line-length = 100

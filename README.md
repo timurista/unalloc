@@ -3,8 +3,10 @@
 **Find the AI spend nobody owns.** Joins OpenCost allocation data with LLM provider bills and reports what's unattributed.
 
 [![ci](https://github.com/timurista/unalloc/actions/workflows/ci.yml/badge.svg)](https://github.com/timurista/unalloc/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/timurista/unalloc/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://github.com/timurista/unalloc/blob/main/pyproject.toml)
+[![Paper](https://img.shields.io/badge/paper-PDF-1f5b45.svg)](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf)
+[![Explorer](https://img.shields.io/badge/explorer-live-1f5b45.svg)](https://timurista.github.io/unalloc/)
 
 OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Neither tells you what a single AI feature costs, because the two live in different systems with different keys. `unalloc` pulls both into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team.
 
@@ -72,11 +74,11 @@ make check    # ruff + pytest, same as CI
 Or as a container, which needs no Python on the host:
 
 ```bash
-docker build -t unalloc:0.1.0 .
-docker run --rm unalloc:0.1.0 report --fixtures -D team
+docker build -t unalloc:0.2.0 .
+docker run --rm unalloc:0.2.0 report --fixtures -D team
 
 # against real systems, reachable from the container
-docker run --rm --network host --env-file .env unalloc:0.1.0 report -D team
+docker run --rm --network host --env-file .env unalloc:0.2.0 report -D team
 ```
 
 Copy `.env.example` to `.env` for the source configuration. unalloc stores
@@ -146,15 +148,15 @@ Two design choices worth calling out:
 
 ## Case studies and paper
 
-Five studies push real (or realistically simulated) inference workloads through unalloc's own adapters. They exposed nine defects in the tool along the way, all fixed with regression tests, and they're written up as a paper: **[paper/unalloc-case-studies.pdf](paper/unalloc-case-studies.pdf)**.
+Five studies push real (or realistically simulated) inference workloads through unalloc's own adapters. They exposed nine defects in the tool along the way, all fixed with regression tests, and they're written up as a paper: **[paper/unalloc-case-studies.pdf](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf)**.
 
 | Study | What runs | Headline |
 | --- | --- | --- |
-| [`kv_cache`](case_studies/kv_cache) | Discrete-event vLLM-style engine: paged KV blocks, prefix caching, continuous batching, preemption | Step-time metering shows ~0% idle once any request is in flight; KV-memory metering leaves a large share of the bill unowned |
-| [`torch_kv`](case_studies/torch_kv) | A from-scratch PyTorch decoder with a real KV cache serving a 4-tenant trace | Per-token showback over-charges a RAG tenant by 33 points of the pool ($5.7K/month) vs measured compute |
-| [`distributed`](case_studies/distributed) | Tensor and pipeline parallel on `torch.distributed` (gloo), verified against a single-process reference | Owner label on LeaderWorkerSet leaders only: 66% unallocated; falling back to `name` "fixes" it by sending 61% to a Helm chart name |
-| [`hybrid_e2e`](case_studies/hybrid_e2e) | The real CLI as a subprocess against live mock OpenCost / LiteLLM / OpenAI / Anthropic APIs (Postgres-backed LiteLLM in the dev container) | Enabling every source double counts $11.8K; reading only page one of the billing APIs reports 25% of spend |
-| [`use_cases`](case_studies/use_cases) | Labeling Pareto, per-feature unit economics, self-host break-even, CI budget gate | Three label fixes take a 67%-unallocated org under 10% |
+| [`kv_cache`](https://github.com/timurista/unalloc/blob/main/case_studies/kv_cache) | Discrete-event vLLM-style engine: paged KV blocks, prefix caching, continuous batching, preemption | Step-time metering shows ~0% idle once any request is in flight; KV-memory metering leaves a large share of the bill unowned |
+| [`torch_kv`](https://github.com/timurista/unalloc/blob/main/case_studies/torch_kv) | A from-scratch PyTorch decoder with a real KV cache serving a 4-tenant trace | Per-token showback over-charges a RAG tenant by 33 points of the pool ($5.7K/month) vs measured compute |
+| [`distributed`](https://github.com/timurista/unalloc/blob/main/case_studies/distributed) | Tensor and pipeline parallel on `torch.distributed` (gloo), verified against a single-process reference | Owner label on LeaderWorkerSet leaders only: 66% unallocated; falling back to `name` "fixes" it by sending 61% to a Helm chart name |
+| [`hybrid_e2e`](https://github.com/timurista/unalloc/blob/main/case_studies/hybrid_e2e) | The real CLI as a subprocess against live mock OpenCost / LiteLLM / OpenAI / Anthropic APIs (Postgres-backed LiteLLM in the dev container) | Enabling every source double counts $11.8K; reading only page one of the billing APIs reports 25% of spend |
+| [`use_cases`](https://github.com/timurista/unalloc/blob/main/case_studies/use_cases) | Labeling Pareto, per-feature unit economics, self-host break-even, CI budget gate | Three label fixes take a 67%-unallocated org under 10% |
 
 ```bash
 make research            # CPU torch, notebook tooling, typst
@@ -164,13 +166,13 @@ make notebook            # execute case_studies/unalloc_case_studies.ipynb
 make ui                  # ledger explorer on http://127.0.0.1:8765
 ```
 
-![Share of a shared vLLM pod's bill under five metering rules](paper/figures/kv_shares.png)
+![Share of a shared vLLM pod's bill under five metering rules](https://raw.githubusercontent.com/timurista/unalloc/main/paper/figures/kv_shares.png)
 
-The **ledger explorer** (`python -m case_studies.ui`) shows every dataset row by row: pick the label that means "owner", add fallbacks, and watch each row resolve to a team, a fallback value, or the backlog. `python -m case_studies.ui --export explorer.html` writes a self-contained copy you can share.
+The **[ledger explorer](https://timurista.github.io/unalloc/)** (or `python -m case_studies.ui` locally) shows every dataset row by row: pick the label that means "owner", add fallbacks, and watch each row resolve to a team, a fallback value, or the backlog. `python -m case_studies.ui --export explorer.html` writes a self-contained copy you can share.
 
 ## Development environment
 
-An isolated dev stack lives in [`.devcontainer/`](.devcontainer): a Python 3.11 workspace with the case-study dependencies (CPU-only PyTorch) and a small Postgres that backs the mock LiteLLM spend-log store. Open the folder in VS Code's Dev Containers, or from a terminal:
+An isolated dev stack lives in [`.devcontainer/`](https://github.com/timurista/unalloc/blob/main/.devcontainer): a Python 3.11 workspace with the case-study dependencies (CPU-only PyTorch) and a small Postgres that backs the mock LiteLLM spend-log store. Open the folder in VS Code's Dev Containers, or from a terminal:
 
 ```bash
 make devcontainer          # docker compose up

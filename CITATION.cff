@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use unalloc or its case studies, please cite it as below."
+title: "unalloc: find the AI spend nobody owns"
+type: software
+authors:
+  - family-names: Urista
+    given-names: Timothy
+version: 0.2.0
+date-released: "2026-09-13"
+license: Apache-2.0
+repository-code: "https://github.com/timurista/unalloc"
+url: "https://timurista.github.io/unalloc/"
+keywords:
+  - finops
+  - cost attribution
+  - opencost
+  - llm inference
+  - kv cache
+  - kubernetes
+  - distributed inference
+abstract: >-
+  unalloc joins OpenCost Kubernetes allocations with LiteLLM, OpenAI and
+  Anthropic billing data into one Decimal-exact ledger and reports the share
+  of AI spend with no owner. The repository includes five reproducible case
+  studies of inference cost attribution, including real PyTorch KV-cache and
+  torch.distributed inference.
+preferred-citation:
+  type: report
+  title: "Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes and LLM Provider Bills"
+  authors:
+    - family-names: Urista
+      given-names: Timothy
+  year: 2026
+  month: 9
+  url: "https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf"

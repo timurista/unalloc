@@ -1,5 +1,8 @@
 .PHONY: help install dev research demo lint test check check-wheel build clean docker \
-	case-studies case-studies-quick figures paper notebook ui devcontainer devcontainer-check
+	case-studies case-studies-quick figures paper notebook ui devcontainer devcontainer-check \
+	release-check pages
+
+VERSION := $(shell python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
 
 help:                ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -33,7 +36,13 @@ build:               ## Build wheel and sdist into dist/
 	pip install -q build && python -m build
 
 docker:              ## Build the container image
-	docker build -t unalloc:0.1.0 .
+	docker build -t unalloc:$(VERSION) .
+
+release-check: build ## Validate sdist/wheel metadata as PyPI will render it
+	pip install -q twine && twine check --strict dist/*
+
+pages:               ## Rebuild the public explorer served by GitHub Pages from docs/
+	python -m case_studies.ui --export docs/index.html
 
 # --- case studies & paper ------------------------------------------------------
 

@@ -1,0 +1,23 @@
+{
+  "title": "unalloc: find the AI spend nobody owns",
+  "upload_type": "software",
+  "description": "<p>unalloc joins OpenCost Kubernetes allocations with LiteLLM, OpenAI and Anthropic billing data into one Decimal-exact ledger and reports the share of AI spend with no owner.</p><p>This archive includes five reproducible case studies of inference cost attribution (a vLLM-style serving simulator, real PyTorch KV-cache inference, tensor- and pipeline-parallel inference on torch.distributed, an end-to-end run against mock provider APIs, and downstream use cases) and the accompanying paper, <em>Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes and LLM Provider Bills</em>.</p>",
+  "creators": [{ "name": "Urista, Timothy" }],
+  "license": "Apache-2.0",
+  "keywords": [
+    "finops",
+    "cost attribution",
+    "opencost",
+    "llm inference",
+    "kv cache",
+    "kubernetes",
+    "distributed inference"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf",
+      "relation": "isDocumentedBy",
+      "resource_type": "publication-report"
+    }
+  ]
+}
