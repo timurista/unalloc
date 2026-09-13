@@ -1,0 +1,72 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "inference/llm-d-gateway": {
+        "name": "inference/llm-d-gateway",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "llm-d-gateway",
+          "controllerKind": "deployment",
+          "cluster": "prod-us-west",
+          "labels": {"team": "platform", "environment": "prod", "app_kubernetes_io_name": "llm-d"}
+        },
+        "cpuCost": 412.18, "ramCost": 188.44, "gpuCost": 9120.5, "sharedCost": 240.0,
+        "gpuHours": 2880.0, "totalCost": 9961.12, "totalEfficiency": 0.61
+      },
+      "inference/vllm-llama-70b": {
+        "name": "inference/vllm-llama-70b",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "vllm-llama-70b",
+          "controllerKind": "statefulset",
+          "cluster": "prod-us-west",
+          "labels": {"environment": "prod", "costCenter": "CC-4471"},
+          "modelName": "llama-3.3-70b"
+        },
+        "cpuCost": 290.0, "ramCost": 144.2, "gpuCost": 18402.9, "sharedCost": 310.0,
+        "gpuHours": 5760.0, "totalCost": 19147.1, "totalEfficiency": 0.34
+      },
+      "batch/embeddings-worker": {
+        "name": "batch/embeddings-worker",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "batch",
+          "controller": "embeddings-worker",
+          "controllerKind": "cronjob",
+          "cluster": "prod-us-west",
+          "labels": {}
+        },
+        "cpuCost": 980.4, "ramCost": 402.1, "gpuCost": 3120.0, "sharedCost": 96.0,
+        "gpuHours": 960.0, "totalCost": 4598.5, "totalEfficiency": 0.08
+      },
+      "search/api": {
+        "name": "search/api",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "search",
+          "controller": "api",
+          "controllerKind": "deployment",
+          "cluster": "prod-us-west",
+          "labels": {"team": "search", "environment": "prod"}
+        },
+        "cpuCost": 1840.2, "ramCost": 620.8, "gpuCost": 0, "sharedCost": 180.0,
+        "totalCost": 2641.0, "totalEfficiency": 0.71
+      },
+      "__idle__": {
+        "name": "__idle__",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {"cluster": "prod-us-west", "labels": {}},
+        "cpuCost": 610.0, "ramCost": 220.0, "gpuCost": 5240.0,
+        "totalCost": 6070.0, "totalEfficiency": 0.0
+      }
+    }
+  ]
+}

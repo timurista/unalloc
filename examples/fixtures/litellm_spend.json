@@ -1,0 +1,34 @@
+{
+  "data": [
+    {
+      "request_id": "req_01", "model": "gpt-4o", "spend": "1840.22",
+      "startTime": "2026-08-03T11:02:11Z", "endTime": "2026-08-03T11:02:14Z",
+      "prompt_tokens": 812000, "completion_tokens": 240100, "total_tokens": 1052100,
+      "api_key_alias": "search-rerank", "team_id": "search",
+      "request_tags": ["feature:rerank", "environment:prod"],
+      "metadata": {"service": "search-api"}, "cache_hit": false
+    },
+    {
+      "request_id": "req_02", "model": "claude-sonnet-4-6", "spend": "3204.90",
+      "startTime": "2026-08-07T09:41:00Z", "endTime": "2026-08-07T09:41:06Z",
+      "prompt_tokens": 2140000, "completion_tokens": 512300, "total_tokens": 2652300,
+      "api_key_alias": "agent-runtime", "team_id": "platform",
+      "request_tags": ["feature:agent-loop", "environment:prod"],
+      "metadata": {"service": "agent-runtime"}, "cache_hit": true
+    },
+    {
+      "request_id": "req_03", "model": "gpt-4o-mini", "spend": "986.40",
+      "startTime": "2026-08-12T14:20:00Z", "endTime": "2026-08-12T14:20:02Z",
+      "prompt_tokens": 9400000, "completion_tokens": 1100000, "total_tokens": 10500000,
+      "api_key_alias": "sandbox-shared", "request_tags": [],
+      "metadata": {}, "cache_hit": false
+    },
+    {
+      "request_id": "req_04", "model": "claude-opus-5", "spend": "5412.75",
+      "startTime": "2026-08-19T17:55:00Z", "endTime": "2026-08-19T17:55:22Z",
+      "prompt_tokens": 1802000, "completion_tokens": 940400, "total_tokens": 2742400,
+      "api_key_alias": "unknown-legacy-key", "request_tags": ["environment:prod"],
+      "metadata": {}, "cache_hit": false
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests"],
+  "python.analysis.extraPaths": ["src"],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": { "source.fixAll.ruff": "explicit" }
+  },
+  "files.exclude": { "**/__pycache__": true, "**/*.egg-info": true }
+}

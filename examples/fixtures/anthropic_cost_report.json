@@ -1,0 +1,12 @@
+{
+  "data": [
+    {
+      "starting_at": "2026-08-01T00:00:00Z", "ending_at": "2026-09-01T00:00:00Z",
+      "results": [
+        {"amount": "4102.18", "currency": "USD", "workspace_id": "wrkspc_platform", "workspace_name": "platform", "description": "claude-sonnet-4-6 input", "token_type": "input"},
+        {"amount": "2890.55", "currency": "USD", "workspace_id": "wrkspc_platform", "workspace_name": "platform", "description": "claude-sonnet-4-6 output", "token_type": "output"},
+        {"amount": "1744.30", "currency": "USD", "workspace_id": null, "workspace_name": null, "description": "default workspace", "token_type": "input"}
+      ]
+    }
+  ]
+}
