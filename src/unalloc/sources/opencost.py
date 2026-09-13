@@ -10,6 +10,7 @@ tagged with `unalloc_layer=inference` where detectable.
 from __future__ import annotations
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from unalloc.core.models import CostRow
@@ -45,7 +46,10 @@ class OpenCostSource(Source):
         props = alloc.get("properties") or {}
         raw_labels: dict[str, Any] = {}
         raw_labels.update(props.get("labels") or {})
-        raw_labels.update(props.get("annotations") or {})
+        # Labels are the owner contract; an annotation with the same key must
+        # not silently override one.
+        for key, value in (props.get("annotations") or {}).items():
+            raw_labels.setdefault(key, value)
         # Structural identity is a legitimate fallback dimension, so promote it
         # into labels rather than hiding it in meta.
         for key in ("namespace", "controller", "controllerKind", "cluster", "node"):
@@ -57,20 +61,25 @@ class OpenCostSource(Source):
             raw_labels.setdefault("model", model)
             raw_labels.setdefault("unalloc_layer", "inference")
 
-        total = alloc.get("totalCost")
+        total: Any = alloc.get("totalCost")
         if total is None:
+            # Sum as Decimal: going via float here reintroduced exactly the
+            # 0.30000000000000004 noise that money() exists to keep out.
             total = sum(
-                float(alloc.get(field) or 0)
-                for field in (
+                (
+                    money(alloc.get(field))
+                    for field in (
                     "cpuCost",
                     "ramCost",
                     "gpuCost",
                     "pvCost",
                     "networkCost",
                     "loadBalancerCost",
-                    "sharedCost",
-                    "externalCost",
-                )
+                        "sharedCost",
+                        "externalCost",
+                    )
+                ),
+                Decimal("0"),
             )
 
         return CostRow(

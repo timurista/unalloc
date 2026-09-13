@@ -38,6 +38,12 @@ class AttributionReport:
     by_source: dict[str, Decimal]
     unallocated_usd: Decimal
     row_count: int
+    fallback_dimensions: tuple[str, ...] = ()
+    fallback_usd: Decimal = ZERO
+    """Spend that counts as allocated only because a fallback key matched.
+    Reported separately so a fallback onto something that is not an owner
+    (a chart name, a namespace shared by teams) cannot hide inside the
+    headline percentage."""
 
     @property
     def unallocated_pct(self) -> Decimal:
@@ -71,6 +77,7 @@ def attribute(
     counts: dict[str, int] = {}
     by_source: dict[str, Decimal] = {}
     total = ZERO
+    via_fallback = ZERO
 
     for row in rows:
         key = row.label(dimension)
@@ -78,6 +85,7 @@ def attribute(
             for alt in fallback_dimensions:
                 key = row.label(alt)
                 if key is not None:
+                    via_fallback += row.amount_usd
                     break
         key = key or UNALLOCATED
 
@@ -108,6 +116,8 @@ def attribute(
         by_source=dict(sorted(by_source.items())),
         unallocated_usd=totals.get(UNALLOCATED, ZERO),
         row_count=len(rows),
+        fallback_dimensions=tuple(fallback_dimensions),
+        fallback_usd=via_fallback,
     )
 
 
@@ -115,12 +125,16 @@ def unallocated_rows(
     rows: Iterable[CostRow],
     dimension: str,
     *,
+    fallback_dimensions: Sequence[str] = (),
     limit: int = 20,
 ) -> list[CostRow]:
     """The rows that have no value for `dimension`, most expensive first.
 
-    This is the actionable output: a labeling backlog sorted by dollars.
+    This is the actionable output: a labeling backlog sorted by dollars. It
+    honours the same fallbacks as `attribute`, so the backlog always sums to
+    the unallocated bucket of the matching report.
     """
-    missing = [row for row in rows if row.label(dimension) is None]
+    keys = (dimension, *fallback_dimensions)
+    missing = [row for row in rows if all(row.label(key) is None for key in keys)]
     missing.sort(key=lambda r: r.amount_usd, reverse=True)
     return missing[:limit]

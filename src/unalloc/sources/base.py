@@ -20,11 +20,19 @@ from unalloc.core.models import CostRow
 
 DEFAULT_TIMEOUT = 30.0
 
+# Hard stop for cursor pagination. A provider that keeps saying has_more is a
+# bug on their side, and looping forever against a billing API is worse.
+MAX_PAGES = 1000
+
 
 class Source(ABC):
     """Base class for every cost source."""
 
     name: str = "unknown"
+
+    default_base_url: str | None = None
+    """Public API root, for providers that have one. An unset or empty
+    `base_url` falls back to this, so a blank env var does not disable it."""
 
     def __init__(
         self,
@@ -34,7 +42,7 @@ class Source(ABC):
         timeout: float = DEFAULT_TIMEOUT,
         aliases: dict[str, str] | None = None,
     ) -> None:
-        self.base_url = (base_url or "").rstrip("/")
+        self.base_url = (base_url or self.default_base_url or "").rstrip("/")
         self.token = token
         self.timeout = timeout
         self.aliases = aliases or {}
@@ -59,21 +67,45 @@ class Source(ABC):
         with Path(path).open() as handle:
             return self.parse(json.load(handle))
 
-    def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
-        if not self.base_url:
-            raise ValueError(
-                f"{self.name}: no base_url configured. Pass --{self.name}-url "
-                f"or run with --fixtures to demo without infrastructure."
-            )
+    def _headers(self) -> dict[str, str]:
+        """Request headers. Override when a provider does not take Bearer auth."""
         headers = {"Accept": "application/json"}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
+        return headers
+
+    def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        if not self.base_url:
+            raise ValueError(
+                f"{self.name}: no base_url configured. Set UNALLOC_{self.name.upper()}_URL "
+                f"or run with --fixtures to demo without infrastructure."
+            )
         with httpx.Client(timeout=self.timeout) as client:
             response = client.get(
-                f"{self.base_url}{path}", params=params, headers=headers
+                f"{self.base_url}{path}", params=params, headers=self._headers()
             )
             response.raise_for_status()
             return response.json()
+
+    def _get_pages(self, path: str, params: dict[str, Any]) -> dict[str, Any]:
+        """Follow `has_more` / `next_page` cursors and concatenate `data`.
+
+        OpenAI's and Anthropic's admin reporting APIs both page this way. A
+        30-day window grouped by project easily exceeds one page, and silently
+        reading only the first page under-reports spend.
+        """
+        data: list[Any] = []
+        query = dict(params)
+        for _ in range(MAX_PAGES):
+            payload = self._get(path, params=query)
+            if not isinstance(payload, dict):
+                break
+            data.extend(payload.get("data") or [])
+            cursor = payload.get("next_page")
+            if not payload.get("has_more") or not cursor:
+                break
+            query["page"] = cursor
+        return {"data": data}
 
 
 def money(value: Any) -> Decimal:

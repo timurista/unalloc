@@ -40,6 +40,26 @@ def test_opencost_camel_case_cost_center_is_normalized():
     assert vllm.labels["unalloc_layer"] == "inference"
 
 
+def test_opencost_label_wins_over_same_key_annotation():
+    payload = {
+        "data": [
+            {
+                "pod": {
+                    "name": "pod",
+                    "properties": {
+                        "namespace": "ns",
+                        "labels": {"team": "search"},
+                        "annotations": {"team": "someone-else"},
+                    },
+                    "totalCost": 1.0,
+                }
+            }
+        ]
+    }
+    (row,) = REGISTRY["opencost"]().parse(payload)
+    assert row.labels["team"] == "search"
+
+
 def test_litellm_tags_become_dimensions():
     rows = REGISTRY["litellm"]().from_fixture(FIXTURES / "litellm_spend.json")
     rerank = next(r for r in rows if r.labels.get("feature") == "rerank")

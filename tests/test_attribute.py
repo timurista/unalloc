@@ -43,6 +43,14 @@ def test_fallback_dimension_rescues_inconsistent_labels():
     assert rescued.unallocated_pct == Decimal("0")
 
 
+def test_fallback_spend_is_reported_separately():
+    rows = [row("a", "100", {"team": "search"}), row("b", "60", {"namespace": "shared"})]
+    report = attribute(rows, "team", fallback_dimensions=("namespace",))
+    assert report.unallocated_pct == Decimal("0")
+    assert report.fallback_usd == Decimal("60")
+    assert attribute(rows, "team").fallback_usd == Decimal("0")
+
+
 def test_sources_are_joined_under_one_dimension():
     report = attribute(
         [

@@ -44,6 +44,18 @@ def render_report(report: AttributionReport, *, top: int = 20) -> None:
                 (" AI spend is unattributed", "dim"),
                 ("\n", ""),
                 (f"{usd(report.unallocated_usd)} has no '{report.dimension}' label", "dim"),
+                *(
+                    [
+                        ("\n", ""),
+                        (
+                            f"{usd(report.fallback_usd)} attributed only via fallback "
+                            f"({', '.join(report.fallback_dimensions)})",
+                            "yellow",
+                        ),
+                    ]
+                    if report.fallback_usd
+                    else []
+                ),
             ),
             title="unalloc",
             border_style=style.split()[-1],

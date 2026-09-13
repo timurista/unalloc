@@ -64,11 +64,38 @@ def canonical_key(key: str) -> str:
     if "/" in key:
         key = key.rsplit("/", 1)[-1]
     key = _NON_ALNUM.sub("_", key).strip("_")
-    for prefix in _STRIP_PREFIXES:
-        if key.startswith(prefix) and len(key) > len(prefix):
-            key = key[len(prefix) :]
-            break
+    # Strip until nothing matches: OpenCost's Prometheus-style keys stack
+    # prefixes (label_app_kubernetes_io_name), and stopping after one made the
+    # same Kubernetes label canonicalize differently depending on the endpoint.
+    stripped = True
+    while stripped:
+        stripped = False
+        for prefix in _STRIP_PREFIXES:
+            if key.startswith(prefix) and len(key) > len(prefix):
+                key = key[len(prefix) :]
+                stripped = True
+                break
     return key
+
+
+def _precedence(raw_key: str, canon: str, aliased: bool) -> tuple[int, str]:
+    """Rank competing raw keys that land on the same canonical key.
+
+    Lower wins: a key already written canonically, then an alias, then a key
+    that needed rewriting (prefix, camelCase), then a path-derived key. Ties
+    break on the raw key itself, so the result never depends on the order a
+    provider happened to serialize its labels in.
+    """
+    written = raw_key.strip().lower()
+    if written == canon and not aliased:
+        rank = 0
+    elif aliased:
+        rank = 1
+    elif "/" not in written:
+        rank = 2
+    else:
+        rank = 3
+    return rank, written
 
 
 def normalize_labels(
@@ -77,25 +104,30 @@ def normalize_labels(
 ) -> dict[str, str]:
     """Canonicalize keys, apply the alias table, drop empty values.
 
-    Later keys do not clobber earlier ones once a non-empty value is set, so an
-    explicit `team` label wins over a `team_id` that aliases onto it.
+    When several raw keys collapse onto one canonical key, `_precedence`
+    decides deterministically: an explicit `team` label wins over a `team_id`
+    that aliases onto it, and `app.kubernetes.io/name` vs
+    `leaderworkerset.sigs.k8s.io/name` resolves the same way whatever order
+    the provider sent them in.
     """
     if not raw:
         return {}
     table = {**DEFAULT_ALIASES, **(aliases or {})}
-    out: dict[str, str] = {}
+    best: dict[str, tuple[tuple[int, str], str]] = {}
     for key, value in raw.items():
         if value is None:
             continue
         text = str(value).strip()
         if not text:
             continue
-        canon = canonical_key(str(key))
-        if not canon:
+        shaped = canonical_key(str(key))
+        if not shaped:
             continue
-        canon = table.get(canon, canon)
-        out.setdefault(canon, text)
-    return out
+        canon = table.get(shaped, shaped)
+        rank = _precedence(str(key), canon, aliased=canon != shaped)
+        if canon not in best or rank < best[canon][0]:
+            best[canon] = (rank, text)
+    return {canon: text for canon, (_, text) in best.items()}
 
 
 def dimensions(rows: Iterable) -> dict[str, int]:

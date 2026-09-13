@@ -13,16 +13,22 @@ from unalloc.core.models import CostRow
 from unalloc.core.normalize import normalize_labels
 from unalloc.sources.base import Source, money, parse_ts
 
+ANTHROPIC_VERSION = "2023-06-01"
+
 
 class AnthropicSource(Source):
     name = "anthropic"
+    default_base_url = "https://api.anthropic.com/v1"
 
-    def __init__(self, **kwargs: Any) -> None:
-        kwargs.setdefault("base_url", "https://api.anthropic.com/v1")
-        super().__init__(**kwargs)
+    def _headers(self) -> dict[str, str]:
+        # The Admin API authenticates with x-api-key, not a Bearer token.
+        headers = {"Accept": "application/json", "anthropic-version": ANTHROPIC_VERSION}
+        if self.token:
+            headers["x-api-key"] = self.token
+        return headers
 
     def fetch(self, start: datetime, end: datetime) -> list[CostRow]:
-        payload = self._get(
+        payload = self._get_pages(
             "/organizations/cost_report",
             params={
                 "starting_at": start.date().isoformat(),

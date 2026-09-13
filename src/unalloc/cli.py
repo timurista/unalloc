@@ -126,6 +126,12 @@ def report(
     fixture_dir: Path = FixtureDirOpt,
     top: int = typer.Option(20, "--top", help="Rows to show."),
     as_json: bool = JsonOpt,
+    budget: float | None = typer.Option(
+        None,
+        "--budget",
+        help="Exit with code 2 when the unallocated share exceeds this percent. "
+        "Lets CI fail a deploy that ships unlabeled spend.",
+    ),
 ) -> None:
     """Attribute joined spend and report the unallocated share."""
     rows = _load(source, fixtures=fixtures, days=days, fixture_dir=fixture_dir)
@@ -142,6 +148,8 @@ def report(
                     "total_usd": result.total_usd,
                     "unallocated_usd": result.unallocated_usd,
                     "unallocated_pct": result.unallocated_pct,
+                    "fallback_dimensions": result.fallback_dimensions,
+                    "fallback_usd": result.fallback_usd,
                     "by_source": result.by_source,
                     "buckets": result.buckets,
                 }
@@ -150,11 +158,20 @@ def report(
     else:
         render.render_report(result, top=top)
 
+    if budget is not None and result.unallocated_pct > Decimal(str(budget)):
+        typer.secho(
+            f"unallocated {result.unallocated_pct}% exceeds budget {budget}%",
+            fg="red",
+            err=True,
+        )
+        raise typer.Exit(code=2)
+
 
 @app.command()
 def labels(
     source: list[str] = SourcesOpt,
     dimension: str = DimensionOpt,
+    fallback: list[str] = FallbackOpt,
     days: int = DaysOpt,
     fixtures: bool = FixturesOpt,
     fixture_dir: Path = FixtureDirOpt,
@@ -165,11 +182,18 @@ def labels(
 ) -> None:
     """Show the labeling backlog: unattributed cost objects, priciest first."""
     rows = _load(source, fixtures=fixtures, days=days, fixture_dir=fixture_dir)
+    if not rows:
+        # Without this, an unreachable source reads as "Nothing unallocated".
+        typer.secho("No cost rows loaded. Try --fixtures.", fg="yellow")
+        raise typer.Exit(code=1)
     if available:
         for key, count in dimensions(rows).items():
             typer.echo(f"{count:>6}  {key}")
         return
-    render.render_unallocated(unallocated_rows(rows, dimension, limit=limit), dimension)
+    backlog = unallocated_rows(
+        rows, dimension, fallback_dimensions=tuple(fallback), limit=limit
+    )
+    render.render_unallocated(backlog, dimension)
 
 
 @app.command(name="reconcile")

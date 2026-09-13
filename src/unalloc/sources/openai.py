@@ -18,13 +18,10 @@ from unalloc.sources.base import Source, money, parse_ts
 
 class OpenAISource(Source):
     name = "openai"
-
-    def __init__(self, **kwargs: Any) -> None:
-        kwargs.setdefault("base_url", "https://api.openai.com/v1")
-        super().__init__(**kwargs)
+    default_base_url = "https://api.openai.com/v1"
 
     def fetch(self, start: datetime, end: datetime) -> list[CostRow]:
-        payload = self._get(
+        payload = self._get_pages(
             "/organization/costs",
             params={
                 "start_time": int(start.timestamp()),
