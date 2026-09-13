@@ -29,7 +29,10 @@ app = typer.Typer(
     "LLM provider bills and reports what is unattributed.",
 )
 
-FIXTURE_DIR = Path(__file__).resolve().parents[2] / "examples" / "fixtures"
+# Fixtures ship inside the package so `--fixtures` works from an installed
+# wheel, not just from a clone. A clean-venv install is the only way to
+# catch this, so `make check-wheel` does exactly that.
+FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures"
 
 FIXTURE_FILES = {
     "opencost": "opencost_allocation.json",

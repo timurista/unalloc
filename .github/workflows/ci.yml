@@ -25,3 +25,5 @@ jobs:
         run: pytest
       - name: Smoke test the CLI against fixtures
         run: unalloc report --fixtures --dimension team
+      - name: Verify the built wheel ships its fixtures
+        run: make check-wheel

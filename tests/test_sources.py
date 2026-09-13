@@ -7,7 +7,7 @@ import pytest
 
 from unalloc.sources import REGISTRY
 
-FIXTURES = Path(__file__).resolve().parents[1] / "examples" / "fixtures"
+FIXTURES = Path(__file__).resolve().parents[1] / "src" / "unalloc" / "fixtures"
 
 CASES = [
     ("opencost", "opencost_allocation.json", 5),

@@ -148,7 +148,7 @@ What OpenCost structurally cannot do is see your OpenAI and Anthropic bills, bec
 
 ## Contributing
 
-Adding a source is deliberately small: implement `parse()` on a `Source` subclass, add a fixture to `examples/fixtures/`, add a case to `tests/test_sources.py`. The fixtures are the contract, so a PR with a real (scrubbed) payload from a provider is valuable even without the adapter.
+Adding a source is deliberately small: implement `parse()` on a `Source` subclass, add a fixture to `src/unalloc/fixtures/`, add a case to `tests/test_sources.py`. The fixtures are the contract, so a PR with a real (scrubbed) payload from a provider is valuable even without the adapter.
 
 ```bash
 pip install -e ".[dev]"

@@ -1,4 +1,4 @@
-.PHONY: help install dev demo lint test check build clean docker
+.PHONY: help install dev demo lint test check check-wheel build clean docker
 
 help:                ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
@@ -21,6 +21,12 @@ test:                ## Pytest
 	pytest
 
 check: lint test     ## Everything CI runs
+
+check-wheel: build   ## Install the built wheel in a throwaway venv and run the demo
+	@rm -rf /tmp/unalloc-verify && python3 -m venv /tmp/unalloc-verify
+	@/tmp/unalloc-verify/bin/pip install -q dist/unalloc-*.whl
+	@/tmp/unalloc-verify/bin/unalloc report --fixtures -D team
+	@rm -rf /tmp/unalloc-verify
 
 build:               ## Build wheel and sdist into dist/
 	pip install -q build && python -m build
