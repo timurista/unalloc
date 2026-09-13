@@ -1,0 +1,363 @@
+{
+  "study": "use_cases",
+  "quick": false,
+  "U1_pareto": {
+    "bundled_fixtures": {
+      "dimension": "team",
+      "rows": 15,
+      "unlabeled_rows": 11,
+      "curve_pct": [
+        73.5,
+        44.8,
+        35.7,
+        27.5,
+        20.6,
+        14.5,
+        10.1,
+        6.8,
+        4.2,
+        2.4,
+        1.0,
+        0.0
+      ],
+      "fixes_to_reach_pct": {
+        "25": 4,
+        "10": 7,
+        "5": 8
+      },
+      "top_fixes": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-70b",
+          "amount_usd": "19147.1"
+        },
+        {
+          "source": "opencost",
+          "name": "__idle__",
+          "amount_usd": "6070.0"
+        },
+        {
+          "source": "litellm",
+          "name": "claude-opus-5",
+          "amount_usd": "5412.75"
+        },
+        {
+          "source": "opencost",
+          "name": "batch/embeddings-worker",
+          "amount_usd": "4598.5"
+        },
+        {
+          "source": "anthropic",
+          "name": "claude-sonnet-4-6 input",
+          "amount_usd": "4102.18"
+        }
+      ]
+    },
+    "hybrid_org": {
+      "dimension": "team",
+      "rows": 222,
+      "unlabeled_rows": 65,
+      "curve_pct": [
+        66.9,
+        27.5,
+        12.8,
+        1.9,
+        1.9,
+        1.8,
+        1.7,
+        1.7,
+        1.6,
+        1.6,
+        1.5,
+        1.5,
+        1.4,
+        1.4,
+        1.3,
+        1.3,
+        1.2,
+        1.2,
+        1.1,
+        1.1,
+        1.0,
+        1.0,
+        0.9,
+        0.9,
+        0.8,
+        0.8,
+        0.8,
+        0.7,
+        0.7,
+        0.7,
+        0.7,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.3,
+        0.3,
+        0.3,
+        0.3,
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.2,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "fixes_to_reach_pct": {
+        "25": 2,
+        "10": 3,
+        "5": 3
+      },
+      "top_fixes": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-70b",
+          "amount_usd": "16331.8"
+        },
+        {
+          "source": "opencost",
+          "name": "__idle__",
+          "amount_usd": "6070.0"
+        },
+        {
+          "source": "opencost",
+          "name": "batch/embeddings-worker",
+          "amount_usd": "4502.5"
+        },
+        {
+          "source": "litellm",
+          "name": "claude-sonnet-4-6",
+          "amount_usd": "24.772845"
+        },
+        {
+          "source": "litellm",
+          "name": "claude-sonnet-4-6",
+          "amount_usd": "24.399051"
+        }
+      ]
+    }
+  },
+  "U2_feature_economics": [
+    {
+      "feature": "agent-loop",
+      "total_usd": "6132.516372",
+      "api_usd": "6132.516372",
+      "infra_usd": "0.000000",
+      "infra_share": 0.0,
+      "requests": 169836,
+      "usd_per_1k_requests": "36.1085",
+      "api_only_usd_per_1k_requests": "36.1085"
+    },
+    {
+      "feature": "answer",
+      "total_usd": "5247.537051",
+      "api_usd": "3147.537051",
+      "infra_usd": "2100.000000",
+      "infra_share": 0.40018774133282436,
+      "requests": 235157,
+      "usd_per_1k_requests": "22.3150",
+      "api_only_usd_per_1k_requests": "13.3848"
+    },
+    {
+      "feature": "nightly-evals",
+      "total_usd": "838.890993",
+      "api_usd": "838.890993",
+      "infra_usd": "0.000000",
+      "infra_share": 0.0,
+      "requests": 78386,
+      "usd_per_1k_requests": "10.7021",
+      "api_only_usd_per_1k_requests": "10.7021"
+    },
+    {
+      "feature": "tool-router",
+      "total_usd": "566.529154",
+      "api_usd": "566.529154",
+      "infra_usd": "0.000000",
+      "infra_share": 0.0,
+      "requests": 470314,
+      "usd_per_1k_requests": "1.2046",
+      "api_only_usd_per_1k_requests": "1.2046"
+    },
+    {
+      "feature": "unknown",
+      "total_usd": "553.935186",
+      "api_usd": "553.935186",
+      "infra_usd": "0.000000",
+      "infra_share": 0.0,
+      "requests": 28741,
+      "usd_per_1k_requests": "19.2731",
+      "api_only_usd_per_1k_requests": "19.2731"
+    },
+    {
+      "feature": "rerank",
+      "total_usd": "332.148203",
+      "api_usd": "332.148203",
+      "infra_usd": "0.000000",
+      "infra_share": 0.0,
+      "requests": 1097400,
+      "usd_per_1k_requests": "0.3027",
+      "api_only_usd_per_1k_requests": "0.3027"
+    },
+    {
+      "feature": "playground",
+      "total_usd": "243.485008",
+      "api_usd": "243.485008",
+      "infra_usd": "0.000000",
+      "infra_share": 0.0,
+      "requests": 23516,
+      "usd_per_1k_requests": "10.3541",
+      "api_only_usd_per_1k_requests": "10.3541"
+    }
+  ],
+  "U3_break_even": {
+    "gpu_hour_usd": 3.0,
+    "api_tiers_per_mtok": {
+      "small_api_tier": [
+        0.15,
+        0.075,
+        0.6
+      ],
+      "mid_api_tier": [
+        1.0,
+        0.1,
+        5.0
+      ]
+    },
+    "points": [
+      {
+        "rate_rps": 0.1,
+        "busy_fraction": 0.2646958596193715,
+        "output_tokens_per_s": 61.52832994167244,
+        "self_hosted_usd_per_hour": 3.0,
+        "self_hosted_usd_per_mtok_output": 13.543896512766002,
+        "small_api_tier_usd_per_hour": 0.3002067515241532,
+        "small_api_tier_cost_ratio": 9.993113028834179,
+        "mid_api_tier_usd_per_hour": 1.6967183474756626,
+        "mid_api_tier_cost_ratio": 1.7681190307532944
+      },
+      {
+        "rate_rps": 0.25,
+        "busy_fraction": 0.4439474681196629,
+        "output_tokens_per_s": 117.44380993641765,
+        "self_hosted_usd_per_hour": 3.0,
+        "self_hosted_usd_per_mtok_output": 7.095591787974928,
+        "small_api_tier_usd_per_hour": 0.5883966877036169,
+        "small_api_tier_cost_ratio": 5.09860110142418,
+        "mid_api_tier_usd_per_hour": 3.250147342668391,
+        "mid_api_tier_cost_ratio": 0.9230350761688796
+      },
+      {
+        "rate_rps": 0.5,
+        "busy_fraction": 0.64070515152186,
+        "output_tokens_per_s": 209.6026255428096,
+        "self_hosted_usd_per_hour": 2.9999999999999996,
+        "self_hosted_usd_per_mtok_output": 3.9757771696573134,
+        "small_api_tier_usd_per_hour": 1.0829961147392957,
+        "small_api_tier_cost_ratio": 2.770093040197263,
+        "mid_api_tier_usd_per_hour": 5.934297704811651,
+        "mid_api_tier_cost_ratio": 0.5055358105083838
+      },
+      {
+        "rate_rps": 1.0,
+        "busy_fraction": 0.8418029401654605,
+        "output_tokens_per_s": 367.3660563005338,
+        "self_hosted_usd_per_hour": 3.0,
+        "self_hosted_usd_per_mtok_output": 2.2684004660779067,
+        "small_api_tier_usd_per_hour": 1.8911006438142879,
+        "small_api_tier_cost_ratio": 1.5863777582715528,
+        "mid_api_tier_usd_per_hour": 10.540329448381007,
+        "mid_api_tier_cost_ratio": 0.2846210846341999
+      },
+      {
+        "rate_rps": 2.0,
+        "busy_fraction": 0.9918992767462456,
+        "output_tokens_per_s": 730.8272904413365,
+        "self_hosted_usd_per_hour": 3.0,
+        "self_hosted_usd_per_mtok_output": 1.1402602834249593,
+        "small_api_tier_usd_per_hour": 3.753786397821772,
+        "small_api_tier_cost_ratio": 0.7991930499137683,
+        "mid_api_tier_usd_per_hour": 20.927829398409802,
+        "mid_api_tier_cost_ratio": 0.14334979241697918
+      },
+      {
+        "rate_rps": 3.0,
+        "busy_fraction": 0.9983222655303579,
+        "output_tokens_per_s": 1075.8870056036244,
+        "self_hosted_usd_per_hour": 3.0,
+        "self_hosted_usd_per_mtok_output": 0.7745546967228153,
+        "small_api_tier_usd_per_hour": 5.496004889372554,
+        "small_api_tier_cost_ratio": 0.5458510427821857,
+        "mid_api_tier_usd_per_hour": 30.798404521806884,
+        "mid_api_tier_cost_ratio": 0.09740764323930619
+      },
+      {
+        "rate_rps": 4.0,
+        "busy_fraction": 0.9989309715853919,
+        "output_tokens_per_s": 1297.8970590787583,
+        "self_hosted_usd_per_hour": 3.0,
+        "self_hosted_usd_per_mtok_output": 0.6420642742844564,
+        "small_api_tier_usd_per_hour": 6.606833814493897,
+        "small_api_tier_cost_ratio": 0.4540752929820453,
+        "mid_api_tier_usd_per_hour": 37.625583970812706,
+        "mid_api_tier_cost_ratio": 0.07973298174792955
+      },
+      {
+        "rate_rps": 5.0,
+        "busy_fraction": 0.999336053205667,
+        "output_tokens_per_s": 1291.3852814289999,
+        "self_hosted_usd_per_hour": 3.0,
+        "self_hosted_usd_per_mtok_output": 0.645301867163297,
+        "small_api_tier_usd_per_hour": 6.811033696714733,
+        "small_api_tier_cost_ratio": 0.440461776227452,
+        "mid_api_tier_usd_per_hour": 40.77228004851885,
+        "mid_api_tier_cost_ratio": 0.07357940238882917
+      },
+      {
+        "rate_rps": 6.0,
+        "busy_fraction": 0.999578631354831,
+        "output_tokens_per_s": 1282.1381170731984,
+        "self_hosted_usd_per_hour": 3.0,
+        "self_hosted_usd_per_mtok_output": 0.6499559776255819,
+        "small_api_tier_usd_per_hour": 6.853163683645894,
+        "small_api_tier_cost_ratio": 0.43775402696991994,
+        "mid_api_tier_usd_per_hour": 42.29972776777798,
+        "mid_api_tier_cost_ratio": 0.07092244225470559
+      }
+    ]
+  },
+  "U4_budget_gate": [
+    {
+      "budget_pct": "50",
+      "exit_code": 2,
+      "stderr": "unallocated 73.5% exceeds budget 50.0%"
+    },
+    {
+      "budget_pct": "80",
+      "exit_code": 0,
+      "stderr": ""
+    }
+  ],
+  "runtime_s": 25.642508291639388
+}

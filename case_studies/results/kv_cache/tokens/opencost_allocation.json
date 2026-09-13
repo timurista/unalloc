@@ -1,0 +1,94 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "inference/vllm-llama-3.1-8b/agents": {
+        "name": "inference/vllm-llama-3.1-8b/agents",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "vllm-llama-3.1-8b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "environment": "prod",
+            "costCenter": "CC-4471",
+            "team": "agents"
+          },
+          "modelName": "llama-3.1-8b"
+        },
+        "cpuCost": 0.0,
+        "ramCost": 0.0,
+        "gpuCost": 12507.212208,
+        "sharedCost": 0.0,
+        "totalCost": 12507.212208
+      },
+      "inference/vllm-llama-3.1-8b/platform": {
+        "name": "inference/vllm-llama-3.1-8b/platform",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "vllm-llama-3.1-8b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "environment": "prod",
+            "costCenter": "CC-4471",
+            "team": "platform"
+          },
+          "modelName": "llama-3.1-8b"
+        },
+        "cpuCost": 0.0,
+        "ramCost": 0.0,
+        "gpuCost": 957.502617,
+        "sharedCost": 0.0,
+        "totalCost": 957.502617
+      },
+      "inference/vllm-llama-3.1-8b/sandbox": {
+        "name": "inference/vllm-llama-3.1-8b/sandbox",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "vllm-llama-3.1-8b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "environment": "prod",
+            "costCenter": "CC-4471"
+          },
+          "modelName": "llama-3.1-8b"
+        },
+        "cpuCost": 0.0,
+        "ramCost": 0.0,
+        "gpuCost": 920.892521,
+        "sharedCost": 0.0,
+        "totalCost": 920.892521
+      },
+      "inference/vllm-llama-3.1-8b/search": {
+        "name": "inference/vllm-llama-3.1-8b/search",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "vllm-llama-3.1-8b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "environment": "prod",
+            "costCenter": "CC-4471",
+            "team": "search"
+          },
+          "modelName": "llama-3.1-8b"
+        },
+        "cpuCost": 0.0,
+        "ramCost": 0.0,
+        "gpuCost": 2894.392654,
+        "sharedCost": 0.0,
+        "totalCost": 2894.392654
+      }
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "inference/torch-kv-tiny:search": {
+        "name": "inference/torch-kv-tiny:search",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "torch-kv-tiny",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "environment": "prod",
+            "costCenter": "CC-4471",
+            "team": "search"
+          },
+          "modelName": "torch-kv-tiny-4l-256d"
+        },
+        "cpuCost": 0.0,
+        "ramCost": 0.0,
+        "gpuCost": 7850.54,
+        "sharedCost": 0.0,
+        "gpuHours": 2616.846667,
+        "totalCost": 7850.54
+      },
+      "inference/torch-kv-tiny:agents": {
+        "name": "inference/torch-kv-tiny:agents",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "torch-kv-tiny",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "environment": "prod",
+            "costCenter": "CC-4471",
+            "team": "agents"
+          },
+          "modelName": "torch-kv-tiny-4l-256d"
+        },
+        "cpuCost": 0.0,
+        "ramCost": 0.0,
+        "gpuCost": 2667.3,
+        "sharedCost": 0.0,
+        "gpuHours": 889.1,
+        "totalCost": 2667.3
+      },
+      "inference/torch-kv-tiny:platform": {
+        "name": "inference/torch-kv-tiny:platform",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "torch-kv-tiny",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "environment": "prod",
+            "costCenter": "CC-4471",
+            "team": "platform"
+          },
+          "modelName": "torch-kv-tiny-4l-256d"
+        },
+        "cpuCost": 0.0,
+        "ramCost": 0.0,
+        "gpuCost": 3320.92,
+        "sharedCost": 0.0,
+        "gpuHours": 1106.973333,
+        "totalCost": 3320.92
+      },
+      "inference/torch-kv-tiny:sandbox": {
+        "name": "inference/torch-kv-tiny:sandbox",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "torch-kv-tiny",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "environment": "prod",
+            "costCenter": "CC-4471"
+          },
+          "modelName": "torch-kv-tiny-4l-256d"
+        },
+        "cpuCost": 0.0,
+        "ramCost": 0.0,
+        "gpuCost": 3441.24,
+        "sharedCost": 0.0,
+        "gpuHours": 1147.08,
+        "totalCost": 3441.24
+      }
+    }
+  ]
+}

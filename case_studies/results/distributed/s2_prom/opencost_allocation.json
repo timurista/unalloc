@@ -1,0 +1,436 @@
+{
+  "code": 200,
+  "data": [
+    {
+      "inference/search-llama-70b-0": {
+        "name": "inference/search-llama-70b-0",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "search-llama-70b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "leader",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "0",
+            "leaderworkerset_sigs_k8s_io_group_key": "fdee1901065ba8df3aa21794baaba88e01f93647",
+            "leaderworkerset_sigs_k8s_io_name": "search-llama-70b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "708e2cff35",
+            "leaderworkerset_sigs_k8s_io_worker_index": "0",
+            "team": "search"
+          },
+          "modelName": "llama-3.1-70b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.6,
+        "totalCost": 2621.897664
+      },
+      "inference/search-llama-70b-0-1": {
+        "name": "inference/search-llama-70b-0-1",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "search-llama-70b-0",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "0",
+            "leaderworkerset_sigs_k8s_io_group_key": "fdee1901065ba8df3aa21794baaba88e01f93647",
+            "leaderworkerset_sigs_k8s_io_name": "search-llama-70b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "708e2cff35",
+            "leaderworkerset_sigs_k8s_io_worker_index": "1"
+          },
+          "modelName": "llama-3.1-70b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.6,
+        "totalCost": 2621.897664
+      },
+      "inference/search-llama-70b-0-2": {
+        "name": "inference/search-llama-70b-0-2",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "search-llama-70b-0",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "0",
+            "leaderworkerset_sigs_k8s_io_group_key": "fdee1901065ba8df3aa21794baaba88e01f93647",
+            "leaderworkerset_sigs_k8s_io_name": "search-llama-70b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "708e2cff35",
+            "leaderworkerset_sigs_k8s_io_worker_index": "2"
+          },
+          "modelName": "llama-3.1-70b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.6,
+        "totalCost": 2621.897664
+      },
+      "inference/search-llama-70b-0-3": {
+        "name": "inference/search-llama-70b-0-3",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "search-llama-70b-0",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "0",
+            "leaderworkerset_sigs_k8s_io_group_key": "fdee1901065ba8df3aa21794baaba88e01f93647",
+            "leaderworkerset_sigs_k8s_io_name": "search-llama-70b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "708e2cff35",
+            "leaderworkerset_sigs_k8s_io_worker_index": "3"
+          },
+          "modelName": "llama-3.1-70b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.6,
+        "totalCost": 2621.897664
+      },
+      "inference/search-llama-70b-1": {
+        "name": "inference/search-llama-70b-1",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "search-llama-70b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "leader",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "1",
+            "leaderworkerset_sigs_k8s_io_group_key": "8653131a08c589b82f083420eb072f3ad1906c5c",
+            "leaderworkerset_sigs_k8s_io_name": "search-llama-70b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "708e2cff35",
+            "leaderworkerset_sigs_k8s_io_worker_index": "0",
+            "team": "search"
+          },
+          "modelName": "llama-3.1-70b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.6,
+        "totalCost": 2621.897664
+      },
+      "inference/search-llama-70b-1-1": {
+        "name": "inference/search-llama-70b-1-1",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "search-llama-70b-1",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "1",
+            "leaderworkerset_sigs_k8s_io_group_key": "8653131a08c589b82f083420eb072f3ad1906c5c",
+            "leaderworkerset_sigs_k8s_io_name": "search-llama-70b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "708e2cff35",
+            "leaderworkerset_sigs_k8s_io_worker_index": "1"
+          },
+          "modelName": "llama-3.1-70b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.6,
+        "totalCost": 2621.897664
+      },
+      "inference/search-llama-70b-1-2": {
+        "name": "inference/search-llama-70b-1-2",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "search-llama-70b-1",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "1",
+            "leaderworkerset_sigs_k8s_io_group_key": "8653131a08c589b82f083420eb072f3ad1906c5c",
+            "leaderworkerset_sigs_k8s_io_name": "search-llama-70b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "708e2cff35",
+            "leaderworkerset_sigs_k8s_io_worker_index": "2"
+          },
+          "modelName": "llama-3.1-70b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.6,
+        "totalCost": 2621.897664
+      },
+      "inference/search-llama-70b-1-3": {
+        "name": "inference/search-llama-70b-1-3",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "search-llama-70b-1",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "1",
+            "leaderworkerset_sigs_k8s_io_group_key": "8653131a08c589b82f083420eb072f3ad1906c5c",
+            "leaderworkerset_sigs_k8s_io_name": "search-llama-70b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "708e2cff35",
+            "leaderworkerset_sigs_k8s_io_worker_index": "3"
+          },
+          "modelName": "llama-3.1-70b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.6,
+        "totalCost": 2621.897664
+      },
+      "inference/agents-qwen-32b-0": {
+        "name": "inference/agents-qwen-32b-0",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "agents-qwen-32b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "leader",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "0",
+            "leaderworkerset_sigs_k8s_io_group_key": "7c4793c9c3cce2ba893b2d69c0ecfe46769c8d2d",
+            "leaderworkerset_sigs_k8s_io_name": "agents-qwen-32b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "644fb1ac8f",
+            "leaderworkerset_sigs_k8s_io_worker_index": "0",
+            "team": "agents"
+          },
+          "modelName": "qwen2.5-32b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.45,
+        "totalCost": 2621.897664
+      },
+      "inference/agents-qwen-32b-0-1": {
+        "name": "inference/agents-qwen-32b-0-1",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "agents-qwen-32b-0",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "0",
+            "leaderworkerset_sigs_k8s_io_group_key": "7c4793c9c3cce2ba893b2d69c0ecfe46769c8d2d",
+            "leaderworkerset_sigs_k8s_io_name": "agents-qwen-32b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "644fb1ac8f",
+            "leaderworkerset_sigs_k8s_io_worker_index": "1"
+          },
+          "modelName": "qwen2.5-32b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.45,
+        "totalCost": 2621.897664
+      },
+      "inference/agents-qwen-32b-1": {
+        "name": "inference/agents-qwen-32b-1",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "agents-qwen-32b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "leader",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "1",
+            "leaderworkerset_sigs_k8s_io_group_key": "c7a0155b4061c81568fc57aa85517fa79b5a85dd",
+            "leaderworkerset_sigs_k8s_io_name": "agents-qwen-32b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "644fb1ac8f",
+            "leaderworkerset_sigs_k8s_io_worker_index": "0",
+            "team": "agents"
+          },
+          "modelName": "qwen2.5-32b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.45,
+        "totalCost": 2621.897664
+      },
+      "inference/agents-qwen-32b-1-1": {
+        "name": "inference/agents-qwen-32b-1-1",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "agents-qwen-32b-1",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "1",
+            "leaderworkerset_sigs_k8s_io_group_key": "c7a0155b4061c81568fc57aa85517fa79b5a85dd",
+            "leaderworkerset_sigs_k8s_io_name": "agents-qwen-32b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "644fb1ac8f",
+            "leaderworkerset_sigs_k8s_io_worker_index": "1"
+          },
+          "modelName": "qwen2.5-32b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.45,
+        "totalCost": 2621.897664
+      },
+      "inference/agents-qwen-32b-2": {
+        "name": "inference/agents-qwen-32b-2",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "agents-qwen-32b",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "leader",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "2",
+            "leaderworkerset_sigs_k8s_io_group_key": "e47a6907ed01d7fdd5f51aeeccb543ca5d84af47",
+            "leaderworkerset_sigs_k8s_io_name": "agents-qwen-32b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "644fb1ac8f",
+            "leaderworkerset_sigs_k8s_io_worker_index": "0",
+            "team": "agents"
+          },
+          "modelName": "qwen2.5-32b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.45,
+        "totalCost": 2621.897664
+      },
+      "inference/agents-qwen-32b-2-1": {
+        "name": "inference/agents-qwen-32b-2-1",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "inference",
+          "controller": "agents-qwen-32b-2",
+          "controllerKind": "statefulset",
+          "cluster": "case-study",
+          "labels": {
+            "app_kubernetes_io_component": "worker",
+            "app_kubernetes_io_managed_by": "Helm",
+            "app_kubernetes_io_name": "vllm",
+            "leaderworkerset_sigs_k8s_io_group_index": "2",
+            "leaderworkerset_sigs_k8s_io_group_key": "e47a6907ed01d7fdd5f51aeeccb543ca5d84af47",
+            "leaderworkerset_sigs_k8s_io_name": "agents-qwen-32b",
+            "leaderworkerset_sigs_k8s_io_template_revision_hash": "644fb1ac8f",
+            "leaderworkerset_sigs_k8s_io_worker_index": "1"
+          },
+          "modelName": "qwen2.5-32b"
+        },
+        "cpuCost": 188.148672,
+        "ramCost": 201.748992,
+        "gpuCost": 2232.0,
+        "sharedCost": 0.0,
+        "gpuHours": 744.0,
+        "totalEfficiency": 0.45,
+        "totalCost": 2621.897664
+      },
+      "__idle__": {
+        "name": "__idle__",
+        "start": "2026-08-01T00:00:00Z",
+        "end": "2026-09-01T00:00:00Z",
+        "properties": {
+          "namespace": "",
+          "controller": "",
+          "controllerKind": "",
+          "cluster": "case-study",
+          "labels": {}
+        },
+        "cpuCost": 376.297344,
+        "ramCost": 201.748992,
+        "gpuCost": 1116.0,
+        "sharedCost": 0.0,
+        "gpuHours": 372.0,
+        "totalCost": 1694.046336
+      }
+    }
+  ]
+}

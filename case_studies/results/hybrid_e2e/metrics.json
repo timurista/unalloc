@@ -1,0 +1,369 @@
+{
+  "study": "hybrid_e2e",
+  "quick": false,
+  "litellm_backend": "memory",
+  "assumptions": {
+    "prices_per_mtok": {
+      "gpt-4o": [
+        2.5,
+        10.0
+      ],
+      "gpt-4o-mini": [
+        0.15,
+        0.6
+      ],
+      "claude-sonnet-4-6": [
+        3.0,
+        15.0
+      ],
+      "claude-haiku-4-5": [
+        1.0,
+        5.0
+      ]
+    },
+    "bypass_daily_usd": {
+      "openai": 58.0,
+      "anthropic": 91.0
+    },
+    "streams": [
+      {
+        "team": "search",
+        "key_alias": "search-rerank",
+        "feature": "rerank",
+        "model": "gpt-4o-mini",
+        "daily_requests": 42000,
+        "prompt_tokens": 1900,
+        "completion_tokens": 40
+      },
+      {
+        "team": "search",
+        "key_alias": "search-answer",
+        "feature": "answer",
+        "model": "claude-sonnet-4-6",
+        "daily_requests": 9000,
+        "prompt_tokens": 3200,
+        "completion_tokens": 280
+      },
+      {
+        "team": "agents",
+        "key_alias": "agent-runtime",
+        "feature": "agent-loop",
+        "model": "claude-sonnet-4-6",
+        "daily_requests": 6500,
+        "prompt_tokens": 7800,
+        "completion_tokens": 900
+      },
+      {
+        "team": "agents",
+        "key_alias": "agent-runtime",
+        "feature": "tool-router",
+        "model": "claude-haiku-4-5",
+        "daily_requests": 18000,
+        "prompt_tokens": 900,
+        "completion_tokens": 60
+      },
+      {
+        "team": "platform",
+        "key_alias": "evals",
+        "feature": "nightly-evals",
+        "model": "gpt-4o",
+        "daily_requests": 3000,
+        "prompt_tokens": 2400,
+        "completion_tokens": 500
+      },
+      {
+        "team": null,
+        "key_alias": "sandbox-shared",
+        "feature": "playground",
+        "model": "gpt-4o",
+        "daily_requests": 900,
+        "prompt_tokens": 1500,
+        "completion_tokens": 700
+      },
+      {
+        "team": null,
+        "key_alias": "unknown-legacy-key",
+        "feature": "unknown",
+        "model": "claude-sonnet-4-6",
+        "daily_requests": 1100,
+        "prompt_tokens": 2600,
+        "completion_tokens": 800
+      }
+    ],
+    "page_size": 7
+  },
+  "invoice": {
+    "openai": 3123.281492,
+    "anthropic": 13269.341042999999
+  },
+  "scenarios": {
+    "A_gateway_and_cluster": {
+      "total_usd": "41419.961967",
+      "unallocated_usd": "27701.720194",
+      "unallocated_pct": "66.9",
+      "by_source": {
+        "litellm": "11815.041967",
+        "opencost": "29604.92"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "6699.045526",
+          "sources": [
+            "litellm"
+          ]
+        },
+        {
+          "key": "search",
+          "amount_usd": "5579.685254",
+          "sources": [
+            "litellm",
+            "opencost"
+          ]
+        },
+        {
+          "key": "platform",
+          "amount_usd": "1439.510993",
+          "sources": [
+            "litellm",
+            "opencost"
+          ]
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "27701.720194",
+          "sources": [
+            "litellm",
+            "opencost"
+          ]
+        }
+      ]
+    },
+    "B_all_sources": {
+      "total_usd": "57812.584502",
+      "unallocated_usd": "44094.342729",
+      "unallocated_pct": "76.3",
+      "by_source": {
+        "anthropic": "13269.341043",
+        "litellm": "11815.041967",
+        "openai": "3123.281492",
+        "opencost": "29604.92"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "6699.045526",
+          "sources": [
+            "litellm"
+          ]
+        },
+        {
+          "key": "search",
+          "amount_usd": "5579.685254",
+          "sources": [
+            "litellm",
+            "opencost"
+          ]
+        },
+        {
+          "key": "platform",
+          "amount_usd": "1439.510993",
+          "sources": [
+            "litellm",
+            "opencost"
+          ]
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "44094.342729",
+          "sources": [
+            "anthropic",
+            "litellm",
+            "openai",
+            "opencost"
+          ]
+        }
+      ]
+    },
+    "C_provider_billing": {
+      "total_usd": "16392.622535",
+      "unallocated_usd": "16392.622535",
+      "unallocated_pct": "100.0",
+      "by_source": {
+        "anthropic": "13269.341043",
+        "openai": "3123.281492"
+      },
+      "buckets": [
+        {
+          "key": "<unallocated>",
+          "amount_usd": "16392.622535",
+          "sources": [
+            "anthropic",
+            "openai"
+          ]
+        }
+      ]
+    },
+    "C_provider_billing_with_fallback": {
+      "total_usd": "16392.622535",
+      "unallocated_usd": "0",
+      "unallocated_pct": "0.0",
+      "by_source": {
+        "anthropic": "13269.341043",
+        "openai": "3123.281492"
+      },
+      "buckets": [
+        {
+          "key": "gateway",
+          "amount_usd": "10400.517763",
+          "sources": [
+            "anthropic"
+          ]
+        },
+        {
+          "key": "ml-research",
+          "amount_usd": "2868.823280",
+          "sources": [
+            "anthropic"
+          ]
+        },
+        {
+          "key": "research-notebooks",
+          "amount_usd": "1708.757288",
+          "sources": [
+            "openai"
+          ]
+        },
+        {
+          "key": "gateway-prod",
+          "amount_usd": "1414.524204",
+          "sources": [
+            "openai"
+          ]
+        }
+      ]
+    },
+    "A_by_feature": {
+      "total_usd": "41419.961967",
+      "unallocated_usd": "27504.92",
+      "unallocated_pct": "66.4",
+      "by_source": {
+        "litellm": "11815.041967",
+        "opencost": "29604.92"
+      },
+      "buckets": [
+        {
+          "key": "agent-loop",
+          "amount_usd": "6132.516372",
+          "sources": [
+            "litellm"
+          ]
+        },
+        {
+          "key": "answer",
+          "amount_usd": "5247.537051",
+          "sources": [
+            "litellm",
+            "opencost"
+          ]
+        },
+        {
+          "key": "nightly-evals",
+          "amount_usd": "838.890993",
+          "sources": [
+            "litellm"
+          ]
+        },
+        {
+          "key": "tool-router",
+          "amount_usd": "566.529154",
+          "sources": [
+            "litellm"
+          ]
+        },
+        {
+          "key": "unknown",
+          "amount_usd": "553.935186",
+          "sources": [
+            "litellm"
+          ]
+        },
+        {
+          "key": "rerank",
+          "amount_usd": "332.148203",
+          "sources": [
+            "litellm"
+          ]
+        },
+        {
+          "key": "playground",
+          "amount_usd": "243.485008",
+          "sources": [
+            "litellm"
+          ]
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "27504.92",
+          "sources": [
+            "opencost"
+          ]
+        }
+      ]
+    },
+    "R_reconciliation": {
+      "providers": [
+        {
+          "source": "anthropic",
+          "ledger_usd": "13269.341043",
+          "invoice_usd": "13269.34",
+          "delta_pct": "0.0",
+          "status": "matched"
+        },
+        {
+          "source": "openai",
+          "ledger_usd": "3123.281492",
+          "invoice_usd": "3123.28",
+          "delta_pct": "0.0",
+          "status": "matched"
+        }
+      ],
+      "gateway_vs_provider_invoices": [
+        {
+          "source": "litellm",
+          "ledger_usd": "11815.041967",
+          "invoice_usd": "16392.62",
+          "delta_usd": "-4577.578033",
+          "delta_pct": "-27.9",
+          "status": "under"
+        }
+      ],
+      "bypass_usd": {
+        "openai": 1708.757288,
+        "anthropic": 2868.82328
+      }
+    },
+    "P_pagination": {
+      "openai": {
+        "first_page_usd": "772.041755",
+        "all_pages_usd": "3123.281492"
+      },
+      "anthropic": {
+        "first_page_usd": "3179.560552",
+        "all_pages_usd": "13269.341043"
+      }
+    }
+  },
+  "findings": {
+    "double_counted_usd": "11815.041967",
+    "double_counted_vs_gateway_spend": 1.0,
+    "gateway_coverage_of_provider_invoices": 0.720753615949713
+  },
+  "http_requests": {
+    "opencost": 3,
+    "litellm": 4,
+    "openai": 21,
+    "anthropic": 21
+  },
+  "runtime_s": 1.3586732503026724
+}

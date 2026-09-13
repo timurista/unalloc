@@ -1,0 +1,1481 @@
+{
+  "study": "kv_cache",
+  "quick": false,
+  "environment": {
+    "python": "3.11.15",
+    "platform": "macOS-26.0.1-arm64-arm-64bit"
+  },
+  "assumptions": {
+    "gpu_hour_usd": 3.0,
+    "replicas": 8,
+    "monthly_pool_usd": 17280.0,
+    "main_rate_rps": 3.0,
+    "tenants": [
+      {
+        "name": "search",
+        "team": "search",
+        "weight": 0.4,
+        "prompt": [
+          600,
+          1400
+        ],
+        "output": [
+          16,
+          64
+        ],
+        "system_prefix": 512,
+        "prefix_groups": 3,
+        "turns": null,
+        "think_s": [
+          1.0,
+          5.0
+        ]
+      },
+      {
+        "name": "agents",
+        "team": "agents",
+        "weight": 0.2,
+        "prompt": [
+          80,
+          240
+        ],
+        "output": [
+          150,
+          400
+        ],
+        "system_prefix": 1024,
+        "prefix_groups": 1,
+        "turns": [
+          3,
+          8
+        ],
+        "think_s": [
+          1.0,
+          5.0
+        ]
+      },
+      {
+        "name": "platform",
+        "team": "platform",
+        "weight": 0.25,
+        "prompt": [
+          200,
+          600
+        ],
+        "output": [
+          64,
+          256
+        ],
+        "system_prefix": 256,
+        "prefix_groups": 2,
+        "turns": null,
+        "think_s": [
+          1.0,
+          5.0
+        ]
+      },
+      {
+        "name": "sandbox",
+        "team": null,
+        "weight": 0.15,
+        "prompt": [
+          50,
+          2000
+        ],
+        "output": [
+          10,
+          500
+        ],
+        "system_prefix": 0,
+        "prefix_groups": 1,
+        "turns": null,
+        "think_s": [
+          1.0,
+          5.0
+        ]
+      }
+    ],
+    "list_price_weights": {
+      "input": 1.0,
+      "cached_input": 0.1,
+      "output": 4.0
+    }
+  },
+  "headline": {
+    "config": {
+      "rate_rps": 3.0,
+      "duration_s": 1800.0,
+      "seed": 7,
+      "engine": {
+        "block_size": 16,
+        "num_blocks": 12000,
+        "max_num_seqs": 96,
+        "max_batched_tokens": 2048,
+        "prefix_caching": true,
+        "watermark": 0.01
+      },
+      "step_cost": {
+        "base_s": 0.004,
+        "per_prefill_token_s": 6e-05,
+        "per_decode_seq_s": 0.0003,
+        "per_context_token_s": 1.2e-07
+      },
+      "model": {
+        "name": "llama-3.1-8b",
+        "layers": 32,
+        "kv_heads": 8,
+        "head_dim": 128,
+        "bytes_per_element": 2,
+        "kv_bytes_per_token": 131072
+      }
+    },
+    "wall_s": 1805.337098990037,
+    "idle_s": 0.5079515900433462,
+    "busy_fraction": 0.999718638923264,
+    "steps": 99882,
+    "requests": 10020,
+    "dropped": 0,
+    "evictions": 142979,
+    "preemptions": 0,
+    "cache_hit_rate": 0.7476437624951989,
+    "output_tokens_per_s": 1150.6504802688175,
+    "cache_reserve_fraction": 0.7788596885727203,
+    "tenants": {
+      "agents": {
+        "team": "agents",
+        "requests": 5702,
+        "prompt_tokens": 12872521,
+        "cached_prompt_tokens": 11917968,
+        "completion_tokens": 1565909,
+        "cache_hit_rate": 0.9258456832193166,
+        "compute_s": 1286.2726360763922,
+        "kv_block_s": 3005283.534950512,
+        "preemptions": 0,
+        "recomputed_tokens": 0,
+        "ttft_p50_s": 0.037669508342816016,
+        "ttft_p95_s": 0.10684803507285778,
+        "e2e_p50_s": 5.412180526097131
+      },
+      "platform": {
+        "team": "platform",
+        "requests": 1351,
+        "prompt_tokens": 887081,
+        "cached_prompt_tokens": 345344,
+        "completion_tokens": 218268,
+        "cache_hit_rate": 0.3893037952565775,
+        "compute_s": 150.69707979019367,
+        "kv_block_s": 179617.65840676002,
+        "preemptions": 0,
+        "recomputed_tokens": 0,
+        "ttft_p50_s": 0.05185501870118969,
+        "ttft_p95_s": 0.11538504629245239,
+        "e2e_p50_s": 3.113513430722435
+      },
+      "sandbox": {
+        "team": null,
+        "requests": 820,
+        "prompt_tokens": 855020,
+        "cached_prompt_tokens": 0,
+        "completion_tokens": 208066,
+        "cache_hit_rate": 0.0,
+        "compute_s": 178.0208755728037,
+        "kv_block_s": 335496.2930910399,
+        "preemptions": 0,
+        "recomputed_tokens": 0,
+        "ttft_p50_s": 0.09564359968328517,
+        "ttft_p95_s": 0.17799343608544405,
+        "e2e_p50_s": 4.805937532266
+      },
+      "search": {
+        "team": "search",
+        "requests": 2147,
+        "prompt_tokens": 3256242,
+        "cached_prompt_tokens": 1097728,
+        "completion_tokens": 85069,
+        "cache_hit_rate": 0.3371149932959528,
+        "compute_s": 189.83855596060914,
+        "kv_block_s": 177205.62532744123,
+        "preemptions": 0,
+        "recomputed_tokens": 0,
+        "ttft_p50_s": 0.09089086888707243,
+        "ttft_p95_s": 0.15066498452915766,
+        "e2e_p50_s": 0.8523058059111008
+      }
+    },
+    "shares": {
+      "tokens": {
+        "agents": 0.7237970027936389,
+        "platform": 0.05541103106369224,
+        "sandbox": 0.05329239124419195,
+        "search": 0.16749957489847694,
+        "__overhead__": 0.0
+      },
+      "list_price": {
+        "agents": 0.5941279571515042,
+        "platform": 0.10238964178191778,
+        "sandbox": 0.1191990830774552,
+        "search": 0.18428331798912284,
+        "__overhead__": 0.0
+      },
+      "compute": {
+        "agents": 0.7124833565963797,
+        "platform": 0.08347309755862127,
+        "sandbox": 0.09860810796631513,
+        "search": 0.10515407680195066,
+        "__overhead__": 0.00028136107673315536
+      },
+      "memory": {
+        "agents": 0.13872217810142692,
+        "platform": 0.008291048917643684,
+        "sandbox": 0.015486318006700205,
+        "search": 0.008179710843041248,
+        "__overhead__": 0.829320744131188
+      },
+      "blended": {
+        "agents": 0.42560276734890334,
+        "platform": 0.045882073238132474,
+        "sandbox": 0.05704721298650767,
+        "search": 0.056666893822495956,
+        "__overhead__": 0.41480105260396055
+      }
+    }
+  },
+  "divergence": {
+    "tokens_vs_compute": {
+      "tenant": "search",
+      "share_points": 6.23159035054884,
+      "all": {
+        "agents": 0.011113124693946652,
+        "platform": -0.028085559185465077,
+        "sandbox": -0.045343469013969906,
+        "search": 0.06231590350548841
+      }
+    },
+    "tokens_vs_memory": {
+      "tenant": "search",
+      "share_points": 11.957511681829667,
+      "all": {
+        "agents": -0.08896830600318373,
+        "platform": 0.006834249571181089,
+        "sandbox": -0.037441060386294064,
+        "search": 0.11957511681829666
+      }
+    },
+    "list_price_vs_blended": {
+      "tenant": "agents",
+      "share_points": -13.315080717763294,
+      "all": {
+        "agents": -0.13315080717763295,
+        "platform": 0.023985411148397348,
+        "sandbox": 0.02171563195309703,
+        "search": 0.0874497640761387
+      }
+    }
+  },
+  "unalloc": {
+    "baseline": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.0",
+      "unallocated_usd": "17280.0",
+      "unallocated_pct": "100.0",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.0"
+      },
+      "buckets": [
+        {
+          "key": "<unallocated>",
+          "amount_usd": "17280.0",
+          "by_source": {
+            "opencost": "17280.0"
+          },
+          "rows": 1
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b",
+          "amount_usd": "17280.0"
+        }
+      ]
+    },
+    "tokens": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.000000",
+      "unallocated_usd": "920.892521",
+      "unallocated_pct": "5.3",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.000000"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "12507.212208",
+          "by_source": {
+            "opencost": "12507.212208"
+          },
+          "rows": 1
+        },
+        {
+          "key": "search",
+          "amount_usd": "2894.392654",
+          "by_source": {
+            "opencost": "2894.392654"
+          },
+          "rows": 1
+        },
+        {
+          "key": "platform",
+          "amount_usd": "957.502617",
+          "by_source": {
+            "opencost": "957.502617"
+          },
+          "rows": 1
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "920.892521",
+          "by_source": {
+            "opencost": "920.892521"
+          },
+          "rows": 1
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/sandbox",
+          "amount_usd": "920.892521"
+        }
+      ]
+    },
+    "list_price": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.000001",
+      "unallocated_usd": "2059.760156",
+      "unallocated_pct": "11.9",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.000001"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "10266.5311",
+          "by_source": {
+            "opencost": "10266.5311"
+          },
+          "rows": 1
+        },
+        {
+          "key": "search",
+          "amount_usd": "3184.415735",
+          "by_source": {
+            "opencost": "3184.415735"
+          },
+          "rows": 1
+        },
+        {
+          "key": "platform",
+          "amount_usd": "1769.29301",
+          "by_source": {
+            "opencost": "1769.29301"
+          },
+          "rows": 1
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "2059.760156",
+          "by_source": {
+            "opencost": "2059.760156"
+          },
+          "rows": 1
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/sandbox",
+          "amount_usd": "2059.760156"
+        }
+      ]
+    },
+    "compute": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.000000",
+      "unallocated_usd": "1708.810025",
+      "unallocated_pct": "9.9",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.000000"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "12311.712402",
+          "by_source": {
+            "opencost": "12311.712402"
+          },
+          "rows": 1
+        },
+        {
+          "key": "search",
+          "amount_usd": "1817.062447",
+          "by_source": {
+            "opencost": "1817.062447"
+          },
+          "rows": 1
+        },
+        {
+          "key": "platform",
+          "amount_usd": "1442.415126",
+          "by_source": {
+            "opencost": "1442.415126"
+          },
+          "rows": 1
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "1708.810025",
+          "by_source": {
+            "opencost": "1708.810025"
+          },
+          "rows": 2
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/sandbox",
+          "amount_usd": "1703.948106"
+        },
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/__overhead__",
+          "amount_usd": "4.861919"
+        }
+      ]
+    },
+    "compute_redistributed": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.000001",
+      "unallocated_usd": "1704.427665",
+      "unallocated_pct": "9.9",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.000001"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "12315.177414",
+          "by_source": {
+            "opencost": "12315.177414"
+          },
+          "rows": 1
+        },
+        {
+          "key": "search",
+          "amount_usd": "1817.573842",
+          "by_source": {
+            "opencost": "1817.573842"
+          },
+          "rows": 1
+        },
+        {
+          "key": "platform",
+          "amount_usd": "1442.82108",
+          "by_source": {
+            "opencost": "1442.82108"
+          },
+          "rows": 1
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "1704.427665",
+          "by_source": {
+            "opencost": "1704.427665"
+          },
+          "rows": 1
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/sandbox",
+          "amount_usd": "1704.427665"
+        }
+      ]
+    },
+    "memory": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.000000",
+      "unallocated_usd": "14598.266034",
+      "unallocated_pct": "84.5",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.000000"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "2397.119238",
+          "by_source": {
+            "opencost": "2397.119238"
+          },
+          "rows": 1
+        },
+        {
+          "key": "platform",
+          "amount_usd": "143.269325",
+          "by_source": {
+            "opencost": "143.269325"
+          },
+          "rows": 1
+        },
+        {
+          "key": "search",
+          "amount_usd": "141.345403",
+          "by_source": {
+            "opencost": "141.345403"
+          },
+          "rows": 1
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "14598.266034",
+          "by_source": {
+            "opencost": "14598.266034"
+          },
+          "rows": 2
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/__overhead__",
+          "amount_usd": "14330.662459"
+        },
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/sandbox",
+          "amount_usd": "267.603575"
+        }
+      ]
+    },
+    "memory_redistributed": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.000000",
+      "unallocated_usd": "1567.874044",
+      "unallocated_pct": "9.1",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.000000"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "14044.584536",
+          "by_source": {
+            "opencost": "14044.584536"
+          },
+          "rows": 1
+        },
+        {
+          "key": "platform",
+          "amount_usd": "839.406784",
+          "by_source": {
+            "opencost": "839.406784"
+          },
+          "rows": 1
+        },
+        {
+          "key": "search",
+          "amount_usd": "828.134636",
+          "by_source": {
+            "opencost": "828.134636"
+          },
+          "rows": 1
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "1567.874044",
+          "by_source": {
+            "opencost": "1567.874044"
+          },
+          "rows": 1
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/sandbox",
+          "amount_usd": "1567.874044"
+        }
+      ]
+    },
+    "blended": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.000000",
+      "unallocated_usd": "8153.538029",
+      "unallocated_pct": "47.2",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.000000"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "7354.41582",
+          "by_source": {
+            "opencost": "7354.41582"
+          },
+          "rows": 1
+        },
+        {
+          "key": "search",
+          "amount_usd": "979.203925",
+          "by_source": {
+            "opencost": "979.203925"
+          },
+          "rows": 1
+        },
+        {
+          "key": "platform",
+          "amount_usd": "792.842226",
+          "by_source": {
+            "opencost": "792.842226"
+          },
+          "rows": 1
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "8153.538029",
+          "by_source": {
+            "opencost": "8153.538029"
+          },
+          "rows": 2
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/__overhead__",
+          "amount_usd": "7167.762189"
+        },
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/sandbox",
+          "amount_usd": "985.77584"
+        }
+      ]
+    },
+    "blended_redistributed": {
+      "dimension": "team",
+      "fallback": [],
+      "total_usd": "17280.000000",
+      "unallocated_usd": "1684.514035",
+      "unallocated_pct": "9.7",
+      "fallback_usd": "0",
+      "by_source": {
+        "opencost": "17280.000000"
+      },
+      "buckets": [
+        {
+          "key": "agents",
+          "amount_usd": "12567.377048",
+          "by_source": {
+            "opencost": "12567.377048"
+          },
+          "rows": 1
+        },
+        {
+          "key": "search",
+          "amount_usd": "1673.283812",
+          "by_source": {
+            "opencost": "1673.283812"
+          },
+          "rows": 1
+        },
+        {
+          "key": "platform",
+          "amount_usd": "1354.825105",
+          "by_source": {
+            "opencost": "1354.825105"
+          },
+          "rows": 1
+        },
+        {
+          "key": "<unallocated>",
+          "amount_usd": "1684.514035",
+          "by_source": {
+            "opencost": "1684.514035"
+          },
+          "rows": 1
+        }
+      ],
+      "backlog": [
+        {
+          "source": "opencost",
+          "name": "inference/vllm-llama-3.1-8b/sandbox",
+          "amount_usd": "1684.514035"
+        }
+      ]
+    }
+  },
+  "sweep": [
+    {
+      "prefix_caching": true,
+      "rate_rps": 0.25,
+      "busy_fraction": 0.39261451622408183,
+      "cache_hit_rate": 0.7565552221366545,
+      "preemptions": 0,
+      "output_tokens_per_s": 104.85492065059016,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.6073854837759187,
+        "memory": 0.9946249378026126,
+        "blended": 0.8010052107892657
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7449185373033522,
+          "platform": 0.05223871086955137,
+          "sandbox": 0.049052840840305076,
+          "search": 0.15378991098679137
+        },
+        "list_price": {
+          "agents": 0.6129316663942356,
+          "platform": 0.10033353908445536,
+          "sandbox": 0.1084221975979444,
+          "search": 0.17831259692336474
+        },
+        "compute": {
+          "agents": 0.7689862190611939,
+          "platform": 0.09661744337571836,
+          "sandbox": 0.08427819073884432,
+          "search": 0.050118146824243266
+        },
+        "memory": {
+          "agents": 0.8683974554209704,
+          "platform": 0.03811695606042997,
+          "sandbox": 0.053558723105526486,
+          "search": 0.03992686541307313
+        },
+        "blended": {
+          "agents": 0.770328820997336,
+          "platform": 0.09582736299435685,
+          "sandbox": 0.08386330789227682,
+          "search": 0.04998050811603041
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.015439497652309342,
+        "platform": 0.02805999999998221,
+        "sandbox": 0.06623018505362666,
+        "search": 0.06904249254293404
+      }
+    },
+    {
+      "prefix_caching": true,
+      "rate_rps": 0.5,
+      "busy_fraction": 0.5781902831889357,
+      "cache_hit_rate": 0.7327442162054317,
+      "preemptions": 0,
+      "output_tokens_per_s": 184.02306700952428,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.42180971681106305,
+        "memory": 0.9905781782631902,
+        "blended": 0.7061939475371266
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7022508308357766,
+          "platform": 0.06185053812056324,
+          "sandbox": 0.05640361139724904,
+          "search": 0.1794950196464112
+        },
+        "list_price": {
+          "agents": 0.568939426244086,
+          "platform": 0.11367602749485434,
+          "sandbox": 0.12111813031662348,
+          "search": 0.19626641594443617
+        },
+        "compute": {
+          "agents": 0.7145286265420718,
+          "platform": 0.11762074519179695,
+          "sandbox": 0.10271501283683812,
+          "search": 0.06513561542929305
+        },
+        "memory": {
+          "agents": 0.8407239280564518,
+          "platform": 0.04641846703523302,
+          "sandbox": 0.06646116830023877,
+          "search": 0.04639643660807635
+        },
+        "blended": {
+          "agents": 0.7165520525826938,
+          "platform": 0.11647908189653407,
+          "sandbox": 0.10213371565518625,
+          "search": 0.06483514986558583
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.016419999999982338,
+        "platform": 0.028619421142039414,
+        "sandbox": 0.06369939964400828,
+        "search": 0.0656800000000004
+      }
+    },
+    {
+      "prefix_caching": true,
+      "rate_rps": 1.0,
+      "busy_fraction": 0.8634549547851328,
+      "cache_hit_rate": 0.7398028974220914,
+      "preemptions": 0,
+      "output_tokens_per_s": 374.4597309255376,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.13654504521487265,
+        "memory": 0.9794160367540551,
+        "blended": 0.5579805409844638
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7105938730883267,
+          "platform": 0.05972316717144021,
+          "sandbox": 0.05682786805045156,
+          "search": 0.17285509168978158
+        },
+        "list_price": {
+          "agents": 0.5729040334132369,
+          "platform": 0.11004980735664895,
+          "sandbox": 0.12718091592888683,
+          "search": 0.1898652433012274
+        },
+        "compute": {
+          "agents": 0.7295221481324671,
+          "platform": 0.09744536803415388,
+          "sandbox": 0.10470222748973974,
+          "search": 0.06833025634363922
+        },
+        "memory": {
+          "agents": 0.8284454291168459,
+          "platform": 0.04784042878827647,
+          "sandbox": 0.07675805823627864,
+          "search": 0.046956083858598965
+        },
+        "blended": {
+          "agents": 0.7318254779275917,
+          "platform": 0.09629036656823586,
+          "sandbox": 0.10405157541875083,
+          "search": 0.06783258008542149
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.01776720414429178,
+        "platform": 0.03245248329051975,
+        "sandbox": 0.06623135907997835,
+        "search": 0.06825034218786641
+      }
+    },
+    {
+      "prefix_caching": true,
+      "rate_rps": 2.0,
+      "busy_fraction": 0.9943564275543293,
+      "cache_hit_rate": 0.7398139811536754,
+      "preemptions": 0,
+      "output_tokens_per_s": 753.9247856157476,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.005643572445666045,
+        "memory": 0.9466414036525841,
+        "blended": 0.47614248804912507
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7097877323496448,
+          "platform": 0.05989878537889286,
+          "sandbox": 0.05742891122377471,
+          "search": 0.17288457104768779
+        },
+        "list_price": {
+          "agents": 0.5720143444332473,
+          "platform": 0.11020172131151736,
+          "sandbox": 0.1284835548522181,
+          "search": 0.1893003794030173
+        },
+        "compute": {
+          "agents": 0.7255022726405198,
+          "platform": 0.08819196283552778,
+          "sandbox": 0.10130051205438517,
+          "search": 0.08500525246956707
+        },
+        "memory": {
+          "agents": 0.8052604528286732,
+          "platform": 0.05530634938418276,
+          "sandbox": 0.0864461633353038,
+          "search": 0.052987034451840276
+        },
+        "blended": {
+          "agents": 0.7295642402986865,
+          "platform": 0.08651714656034187,
+          "sandbox": 0.10054400176368276,
+          "search": 0.08337461137728887
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.021798084584816024,
+        "platform": 0.03706664791391745,
+        "sandbox": 0.07169578361578033,
+        "search": 0.07439334076578774
+      }
+    },
+    {
+      "prefix_caching": true,
+      "rate_rps": 3.0,
+      "busy_fraction": 0.9991559291309003,
+      "cache_hit_rate": 0.7363019096685456,
+      "preemptions": 0,
+      "output_tokens_per_s": 1103.2841633486732,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.0008440708691003218,
+        "memory": 0.8580181842463503,
+        "blended": 0.42943112755772533
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7043732875540751,
+          "platform": 0.06036688716594669,
+          "sandbox": 0.05600308512391809,
+          "search": 0.17925674015605997
+        },
+        "list_price": {
+          "agents": 0.5707868451572686,
+          "platform": 0.11068622870250484,
+          "sandbox": 0.12301471542926909,
+          "search": 0.19551221071095748
+        },
+        "compute": {
+          "agents": 0.6982997268180088,
+          "platform": 0.09057368561804685,
+          "sandbox": 0.10055196562659487,
+          "search": 0.11057462193734949
+        },
+        "memory": {
+          "agents": 0.8021962397759985,
+          "platform": 0.054477523489926676,
+          "sandbox": 0.09137026105390238,
+          "search": 0.05195597568017247
+        },
+        "blended": {
+          "agents": 0.7112266636636044,
+          "platform": 0.08608255502170756,
+          "sandbox": 0.0994095662161921,
+          "search": 0.10328121509849597
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.03434016579240051,
+        "platform": 0.04900815543777526,
+        "sandbox": 0.09218962399427255,
+        "search": 0.0865494276144716
+      }
+    },
+    {
+      "prefix_caching": true,
+      "rate_rps": 4.0,
+      "busy_fraction": 0.9994623346622965,
+      "cache_hit_rate": 0.717473934992827,
+      "preemptions": 0,
+      "output_tokens_per_s": 1339.6474164191509,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.0005376653377029417,
+        "memory": 0.4999510350581078,
+        "blended": 0.25024435019790536
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.6793456093980795,
+          "platform": 0.06580775691824842,
+          "sandbox": 0.06275167072105046,
+          "search": 0.19209496296262157
+        },
+        "list_price": {
+          "agents": 0.5468712576279531,
+          "platform": 0.11600901925932322,
+          "sandbox": 0.1344595577181263,
+          "search": 0.20266016539459744
+        },
+        "compute": {
+          "agents": 0.6557182596718506,
+          "platform": 0.09710642607028536,
+          "sandbox": 0.1161976337538991,
+          "search": 0.1309776805039649
+        },
+        "memory": {
+          "agents": 0.7883180226742298,
+          "platform": 0.05260628166217132,
+          "sandbox": 0.10972875468924294,
+          "search": 0.04934694097435586
+        },
+        "blended": {
+          "agents": 0.6999369156155452,
+          "platform": 0.08226675720155735,
+          "sandbox": 0.11404042674821036,
+          "search": 0.10375590043468706
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.42269923541931576,
+        "platform": 0.21223739059843183,
+        "sandbox": 0.2526987989422764,
+        "search": 0.30121085848436735
+      }
+    },
+    {
+      "prefix_caching": true,
+      "rate_rps": 6.0,
+      "busy_fraction": 0.9997941611824926,
+      "cache_hit_rate": 0.48190080757454334,
+      "preemptions": 0,
+      "output_tokens_per_s": 1255.0821275970777,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.00020583881750457778,
+        "memory": 0.5138630945819621,
+        "blended": 0.25703446669973334
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.5675720886456543,
+          "platform": 0.0862925760503832,
+          "sandbox": 0.08341944997573619,
+          "search": 0.26271588532822626
+        },
+        "list_price": {
+          "agents": 0.5258710897776768,
+          "platform": 0.11870162672950184,
+          "sandbox": 0.1393246954520863,
+          "search": 0.21610258804073512
+        },
+        "compute": {
+          "agents": 0.5985848671621281,
+          "platform": 0.10978631444894829,
+          "sandbox": 0.13428142738065532,
+          "search": 0.15734739100826822
+        },
+        "memory": {
+          "agents": 0.6733144788495374,
+          "platform": 0.07885864124066909,
+          "sandbox": 0.17178338095496135,
+          "search": 0.07604349895483219
+        },
+        "blended": {
+          "agents": 0.6230333917171202,
+          "platform": 0.09966802317474403,
+          "sandbox": 0.14655055888179053,
+          "search": 0.13074802622634515
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 65.63289957199157,
+        "platform": 60.291325410725136,
+        "sandbox": 62.67925220665006,
+        "search": 62.765479459955316
+      }
+    },
+    {
+      "prefix_caching": false,
+      "rate_rps": 0.25,
+      "busy_fraction": 0.42835918920239513,
+      "cache_hit_rate": 0.0,
+      "preemptions": 0,
+      "output_tokens_per_s": 104.85223660601554,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.5716408107976059,
+        "memory": 0.9932645910902814,
+        "blended": 0.7824527009439437
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7443761573335036,
+          "platform": 0.05234978609284209,
+          "sandbox": 0.049157141944958814,
+          "search": 0.15411691462869548
+        },
+        "list_price": {
+          "agents": 0.7511110893029977,
+          "platform": 0.06418250446827799,
+          "sandbox": 0.057445433033485406,
+          "search": 0.1272609731952389
+        },
+        "compute": {
+          "agents": 0.7810760438567658,
+          "platform": 0.08783580197857276,
+          "sandbox": 0.07761782831809125,
+          "search": 0.05347032584657018
+        },
+        "memory": {
+          "agents": 0.8855887605454709,
+          "platform": 0.03225659512202868,
+          "sandbox": 0.04528343858620847,
+          "search": 0.03687120574629202
+        },
+        "blended": {
+          "agents": 0.7826939354284341,
+          "platform": 0.08697541739397674,
+          "sandbox": 0.0771172812241135,
+          "search": 0.05321336595347564
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.1452200000000019,
+        "platform": 0.04394509050837314,
+        "sandbox": 0.06808000000000902,
+        "search": 0.0997600000000034
+      }
+    },
+    {
+      "prefix_caching": false,
+      "rate_rps": 0.5,
+      "busy_fraction": 0.6091141159459851,
+      "cache_hit_rate": 0.0,
+      "preemptions": 0,
+      "output_tokens_per_s": 184.0183543111425,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.39088588405401425,
+        "memory": 0.9864684080660665,
+        "blended": 0.6886771460600404
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7021436518083537,
+          "platform": 0.06187280209711759,
+          "sandbox": 0.0564239146754401,
+          "search": 0.17955963141908876
+        },
+        "list_price": {
+          "agents": 0.7103920219004419,
+          "platform": 0.07560055919660377,
+          "sandbox": 0.06638179561392633,
+          "search": 0.14762562328902798
+        },
+        "compute": {
+          "agents": 0.7255919720443692,
+          "platform": 0.10784835469444667,
+          "sandbox": 0.09656696994262615,
+          "search": 0.06999270331855813
+        },
+        "memory": {
+          "agents": 0.8696932558629556,
+          "platform": 0.03707310795137879,
+          "sandbox": 0.0530677822413205,
+          "search": 0.040165853944345
+        },
+        "blended": {
+          "agents": 0.728723640254897,
+          "platform": 0.10631023800010443,
+          "sandbox": 0.09562162775206348,
+          "search": 0.06934449399293537
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.15685999999999467,
+        "platform": 0.04401999999998907,
+        "sandbox": 0.07349205816865378,
+        "search": 0.0969387243439428
+      }
+    },
+    {
+      "prefix_caching": false,
+      "rate_rps": 1.0,
+      "busy_fraction": 0.9089129519842212,
+      "cache_hit_rate": 0.0,
+      "preemptions": 0,
+      "output_tokens_per_s": 373.5538472186632,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.09108704801577416,
+        "memory": 0.9650524644373588,
+        "blended": 0.5280697562265665
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7099090945584462,
+          "platform": 0.05986448118939789,
+          "sandbox": 0.056962331354166285,
+          "search": 0.17326409289798958
+        },
+        "list_price": {
+          "agents": 0.7157609603897493,
+          "platform": 0.07256023805295626,
+          "sandbox": 0.06917777321122735,
+          "search": 0.14250102834606718
+        },
+        "compute": {
+          "agents": 0.7490381713181842,
+          "platform": 0.08584215421631641,
+          "sandbox": 0.09121229569065906,
+          "search": 0.0739073787748403
+        },
+        "memory": {
+          "agents": 0.8670162617534973,
+          "platform": 0.037559658717733736,
+          "sandbox": 0.05649852831976423,
+          "search": 0.03892555120900461
+        },
+        "blended": {
+          "agents": 0.7534064477377392,
+          "platform": 0.08405443849905478,
+          "sandbox": 0.08992697796021709,
+          "search": 0.07261213580298902
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.16432536640422768,
+        "platform": 0.05056601221951951,
+        "sandbox": 0.07979072996698733,
+        "search": 0.10261531411373426
+      }
+    },
+    {
+      "prefix_caching": false,
+      "rate_rps": 2.0,
+      "busy_fraction": 0.9984043662967254,
+      "cache_hit_rate": 0.0,
+      "preemptions": 0,
+      "output_tokens_per_s": 741.2399156386241,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.0015956337032715373,
+        "memory": 0.8285247301845714,
+        "blended": 0.41506018194392147
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.7039259143509273,
+          "platform": 0.06110864387687448,
+          "sandbox": 0.058588882262159074,
+          "search": 0.1763765595100391
+        },
+        "list_price": {
+          "agents": 0.7098599273723781,
+          "platform": 0.07414992669792801,
+          "sandbox": 0.07128972599579002,
+          "search": 0.1447004199339039
+        },
+        "compute": {
+          "agents": 0.7507285079891779,
+          "platform": 0.07384167068463922,
+          "sandbox": 0.07643201468671981,
+          "search": 0.09899780663946314
+        },
+        "memory": {
+          "agents": 0.8580056926829825,
+          "platform": 0.04184229831060261,
+          "sandbox": 0.06039226600390714,
+          "search": 0.039759743002507675
+        },
+        "blended": {
+          "agents": 0.7664526762049294,
+          "platform": 0.0691513582436111,
+          "sandbox": 0.07408098630033179,
+          "search": 0.09031497925112776
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 0.22534093385515064,
+        "platform": 0.06804995180513274,
+        "sandbox": 0.10365257724103571,
+        "search": 0.1262029522753778
+      }
+    },
+    {
+      "prefix_caching": false,
+      "rate_rps": 3.0,
+      "busy_fraction": 0.9991998995845519,
+      "cache_hit_rate": 0.0,
+      "preemptions": 0,
+      "output_tokens_per_s": 910.0450204045777,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.0008001004154428726,
+        "memory": 0.2152901996401787,
+        "blended": 0.10804515002781079
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.6484657749803304,
+          "platform": 0.07178318468298969,
+          "sandbox": 0.06659412123100421,
+          "search": 0.21315691910567564
+        },
+        "list_price": {
+          "agents": 0.6603556354407664,
+          "platform": 0.08654222348186438,
+          "sandbox": 0.07925733452937103,
+          "search": 0.17384480654799833
+        },
+        "compute": {
+          "agents": 0.7014326266063542,
+          "platform": 0.08326162241664248,
+          "sandbox": 0.08146398426658381,
+          "search": 0.13384176671041956
+        },
+        "memory": {
+          "agents": 0.8348733006319896,
+          "platform": 0.05049557094443387,
+          "sandbox": 0.07203984597008593,
+          "search": 0.042591282453490566
+        },
+        "blended": {
+          "agents": 0.7601307797010995,
+          "platform": 0.06884842554342736,
+          "sandbox": 0.07731847528625888,
+          "search": 0.09370231946921426
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 6.394524305228771,
+        "platform": 4.1205805223167715,
+        "sandbox": 1.2623694392531206,
+        "search": 3.626552270118566
+      }
+    },
+    {
+      "prefix_caching": false,
+      "rate_rps": 4.0,
+      "busy_fraction": 0.9995285792853896,
+      "cache_hit_rate": 0.0,
+      "preemptions": 0,
+      "output_tokens_per_s": 958.4618719037379,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.0004714207146130356,
+        "memory": 0.17398703716681996,
+        "blended": 0.0872292289407165
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.588468264733949,
+          "platform": 0.08445847364726851,
+          "sandbox": 0.08053625554355055,
+          "search": 0.24653700607523193
+        },
+        "list_price": {
+          "agents": 0.6045341559767411,
+          "platform": 0.10042685723585897,
+          "sandbox": 0.09585336923767392,
+          "search": 0.19918561754972602
+        },
+        "compute": {
+          "agents": 0.647641074633041,
+          "platform": 0.09665321763056617,
+          "sandbox": 0.09951750451467546,
+          "search": 0.15618820322171734
+        },
+        "memory": {
+          "agents": 0.7924081360655463,
+          "platform": 0.06243134946592774,
+          "sandbox": 0.09456032728909224,
+          "search": 0.050600187179433744
+        },
+        "blended": {
+          "agents": 0.7131446343031995,
+          "platform": 0.08116865808252412,
+          "sandbox": 0.09727450288862578,
+          "search": 0.1084122047256506
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 40.17674840730578,
+        "platform": 36.388435455072084,
+        "sandbox": 32.78920206181431,
+        "search": 37.40506707727479
+      }
+    },
+    {
+      "prefix_caching": false,
+      "rate_rps": 6.0,
+      "busy_fraction": 0.9998160664814684,
+      "cache_hit_rate": 0.0,
+      "preemptions": 0,
+      "output_tokens_per_s": 1000.9072034024516,
+      "overhead": {
+        "tokens": 0.0,
+        "list_price": 0.0,
+        "compute": 0.00018393351853174256,
+        "memory": 0.23006672037149456,
+        "blended": 0.11512532694501315
+      },
+      "shares_redistributed": {
+        "tokens": {
+          "agents": 0.5057860484499158,
+          "platform": 0.0986222070303637,
+          "sandbox": 0.09533856378401151,
+          "search": 0.300253180735709
+        },
+        "list_price": {
+          "agents": 0.529457805977278,
+          "platform": 0.1166771894326074,
+          "sandbox": 0.11269632098212838,
+          "search": 0.2411686836079862
+        },
+        "compute": {
+          "agents": 0.5740317142214818,
+          "platform": 0.11370312665841951,
+          "sandbox": 0.1190408781146019,
+          "search": 0.1932242810054968
+        },
+        "memory": {
+          "agents": 0.7294332339450315,
+          "platform": 0.08006641962086748,
+          "sandbox": 0.12316067091146575,
+          "search": 0.06733967552263531
+        },
+        "blended": {
+          "agents": 0.6416394813908849,
+          "platform": 0.09906940453146902,
+          "sandbox": 0.12083320287881298,
+          "search": 0.1384579111988331
+        }
+      },
+      "ttft_p50_s": {
+        "agents": 113.52523623582229,
+        "platform": 101.14215821234376,
+        "sandbox": 103.51015776121994,
+        "search": 103.90476984346134
+      }
+    }
+  ],
+  "runtime_s": 102.45406558318064
+}
