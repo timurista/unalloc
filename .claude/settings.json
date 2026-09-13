@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp -R /private/tmp/claude-501/-Users-timurista-projects-unalloc/caddf39a-8e7a-4d9f-9b81-0e6146e0659c/scratchpad/tar/unalloc /private/tmp/claude-501/-Users-timurista-projects-unalloc/caddf39a-8e7a-4d9f-9b81-0e6146e0659c/scratchpad/testrun)",
+      "Bash(uv venv *)",
+      "Bash(uv pip *)",
+      "Bash(.venv/bin/ruff check *)",
+      "Bash(research-venv/bin/python -c \"import torch, numpy, matplotlib, typst; print\\(torch.__version__, numpy.__version__, matplotlib.__version__\\)\")"
+    ]
+  }
+}
