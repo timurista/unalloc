@@ -119,7 +119,7 @@ Finally I ran the actual CLI as a subprocess against mock OpenCost, LiteLLM, Ope
 
 ## Caveats
 
-The PyTorch timings are from a CPU, so the magnitudes aren't GPU numbers, though the directions are structural. The serving simulator uses an analytic latency model. Workloads are synthetic, and prices are round and illustrative.
+The PyTorch timings are from a CPU, so the magnitudes aren't GPU numbers, though the directions are structural. **Update:** I've since re-run the metering experiment with real vLLM on an NVIDIA H100, and the finding held: token metering over-charged the RAG tenant by 12–14 points. The [GPU addendum](addendum-gpu-validation.md) has the specs, the numbers and the terminal captures. The serving simulator uses an analytic latency model. Workloads are synthetic, and prices are round and illustrative.
 
 ## Try it
 

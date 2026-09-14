@@ -1,0 +1,6 @@
+# Step 1 - create the GPU droplet
+# started: 2026-09-14T23:11:49Z
+$ doctl compute droplet create unalloc-gpu-validation-h100 --region nyc2 --size gpu-h100x1-80gb --image gpu-h100x1-base --ssh-keys 59322707 --tag-names unalloc-gpu-validation --wait
+ID           Name                           Public IPv4       Region    Size Slug          Image                              Status    Tags
+600500094    unalloc-gpu-validation-h100    107.170.52.209    nyc2      gpu-h100x1-80gb    Ubuntu NVIDIA AI/ML Ready Image    active    unalloc-gpu-validation
+# finished: 2026-09-14T23:13:01Z

@@ -15,7 +15,18 @@
       "Bash(docker compose -f .devcontainer/docker-compose.yml *)",
       "Bash(git status*)",
       "Bash(git diff*)",
-      "Bash(git log*)"
+      "Bash(git log*)",
+      "Bash(research-venv/bin/python -)",
+      "Bash(which doctl *)",
+      "Read(//Users/timurista/.config/**)",
+      "WebFetch(domain:vast.ai)",
+      "WebFetch(domain:www.digitalocean.com)",
+      "Bash(doctl compute *)",
+      "Read(//Users/timurista/.ssh/**)",
+      "Bash(ssh-keygen -l -E md5 -f ~/.ssh/id_ed25519.pub)",
+      "WebFetch(domain:docs.vllm.ai)",
+      "WebSearch",
+      "Bash(gzip -9 rate_2.json rate_4.json rate_8.json rate_16.json vllm.log vllm_attempt1_failed.log nvidia_smi.csv)"
     ]
   }
 }

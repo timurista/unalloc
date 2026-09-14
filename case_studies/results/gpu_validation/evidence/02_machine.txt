@@ -1,0 +1,80 @@
+# Machine evidence, captured 2026-09-14T23:22:58Z
+$ doctl compute droplet get 600500094 --format ID,Name,Region,SizeSlug,Image,VCPUs,Memory,Disk,PublicIPv4,Tags,Status
+ID           Name                           Region    Size Slug          Image                              VCPUs    Memory    Disk    Public IPv4       Tags                      Status
+600500094    unalloc-gpu-validation-h100    nyc2      gpu-h100x1-80gb    Ubuntu NVIDIA AI/ML Ready Image    20       245760    720     107.170.52.209    unalloc-gpu-validation    active
+
+$ ping -c 10 107.170.52.209   # network round trip from the operator laptop
+10 packets transmitted, 10 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 87.858/91.076/96.497/2.488 ms
+
+unalloc-gpu-validation-h100
++ hostname
++ nvidia-smi
+Mon Sep 14 23:23:09 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.173.02             Driver Version: 580.173.02     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA H100 80GB HBM3          On  |   00000000:00:09.0 Off |                    0 |
+| N/A   29C    P0             71W /  700W |       0MiB /  81559MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
++ nvidia-smi --query-gpu=name,uuid,pci.bus_id,driver_version,vbios_version,memory.total,power.limit,compute_cap --format=csv
+name, uuid, pci.bus_id, driver_version, vbios_version, memory.total [MiB], power.limit [W], compute_cap
+NVIDIA H100 80GB HBM3, GPU-ff6b91f0-90d4-216d-c74c-3af742f42b1f, 00000000:00:09.0, 580.173.02, 96.00.99.00.01, 81559 MiB, 700.00 W, 9.0
++ nvidia-smi topo -m
+	[4mGPU0	CPU Affinity	NUMA Affinity	GPU NUMA ID[0m
+GPU0	 X 	0-19	0		N/A
+
+Legend:
+
+  X    = Self
+  SYS  = Connection traversing PCIe as well as the SMP interconnect between NUMA nodes (e.g., QPI/UPI)
+  NODE = Connection traversing PCIe as well as the interconnect between PCIe Host Bridges within a NUMA node
+  PHB  = Connection traversing PCIe as well as a PCIe Host Bridge (typically the CPU)
+  PXB  = Connection traversing multiple PCIe bridges (without traversing the PCIe Host Bridge)
+  PIX  = Connection traversing at most a single PCIe bridge
+  NV#  = Connection traversing a bonded set of # NVLinks
++ lscpu
++ grep -E 'Model name|^CPU\(s\)|Thread|Socket|NUMA node\(s\)'
+CPU(s):                                  20
+Model name:                              Intel(R) Xeon(R) Platinum 8468
+Thread(s) per core:                      1
+Socket(s):                               1
+NUMA node(s):                            1
+               total        used        free      shared  buff/cache   available
+Mem:             235           2         224           0           9         231
+Swap:              0           0           0
++ free -g
++ df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1       698G   24G  675G   4% /
++ . /etc/os-release
+++ PRETTY_NAME='Ubuntu 22.04.5 LTS'
+++ NAME=Ubuntu
+++ VERSION_ID=22.04
+++ VERSION='22.04.5 LTS (Jammy Jellyfish)'
+++ VERSION_CODENAME=jammy
+++ ID=ubuntu
+++ ID_LIKE=debian
+++ HOME_URL=https://www.ubuntu.com/
+++ SUPPORT_URL=https://help.ubuntu.com/
+++ BUG_REPORT_URL=https://bugs.launchpad.net/ubuntu/
+++ PRIVACY_POLICY_URL=https://www.ubuntu.com/legal/terms-and-policies/privacy-policy
+Ubuntu 22.04.5 LTS
+5.15.0-185-generic
+++ UBUNTU_CODENAME=jammy
++ echo 'Ubuntu 22.04.5 LTS'
++ uname -r
++ curl -s http://169.254.169.254/metadata/v1/id

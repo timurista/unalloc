@@ -1,0 +1,9 @@
+# Step 5 - benchmark: warm-up, then 120 s each at 2, 4, 8, 16 requests/s (2026-09-14T23:32:16Z)
+$ ssh root@107.170.52.209 'bash remote.sh bench --rates 2 4 8 16 --duration 120'
+warm-up ...
+  warm-up: 14 requests, 0 errors []
+rate 2: 446 requests, 0 errors, 773 output tok/s, 122s -> /root/results/rate_2.json
+rate 4: 862 requests, 0 errors, 1479 output tok/s, 122s -> /root/results/rate_4.json
+rate 8: 1638 requests, 0 errors, 2761 output tok/s, 123s -> /root/results/rate_8.json
+rate 16: 3295 requests, 0 errors, 5389 output tok/s, 122s -> /root/results/rate_16.json
+# benchmark finished: 2026-09-14T23:40:39Z

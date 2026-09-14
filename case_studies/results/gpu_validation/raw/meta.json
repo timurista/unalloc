@@ -1,0 +1,16 @@
+{
+  "model": "Qwen/Qwen2.5-7B-Instruct",
+  "base": "http://localhost:8000",
+  "vllm": {
+    "version": "0.29.0"
+  },
+  "max_len": 8192,
+  "rates": [
+    2.0,
+    4.0,
+    8.0,
+    16.0
+  ],
+  "duration_s": 120.0,
+  "seed": 7
+}

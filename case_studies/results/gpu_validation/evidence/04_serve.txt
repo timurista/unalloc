@@ -1,0 +1,15 @@
+# Step 4b - first start failed: FlashInfer JIT-compiling its sampling kernel (ninja build) during warm-up.
+# Fix: VLLM_USE_FLASHINFER_SAMPLER=0 (PyTorch-native sampler; runs use greedy decoding). Retry at 2026-09-14T23:28:47Z
+$ ssh root@107.170.52.209 'bash remote.sh stop; mv /root/results/vllm.log /root/results/vllm_attempt1_failed.log; VLLM_USE_FLASHINFER_SAMPLER=0 bash remote.sh serve'
+vLLM healthy
+# healthy at: 2026-09-14T23:29:40Z
+$ curl -s localhost:8000/version; curl -s localhost:8000/v1/models
+{"version":"0.29.0"}
+{"object":"list","data":[{"id":"Qwen/Qwen2.5-7B-Instruct","object":"model","created":1789428581,"owned_by":"vllm","root":"Qwen/Qwen2.5-7B-Instruct","parent":null,"max_model_len":8192,"permission":[{"id":"modelperm-869d6627cda927b1","object":"model_permission","created":1789428581,"allow_create_engin
+(EngineCore pid=4534) INFO 09-14 23:29:07 [model_runner.py:404] Model loading took 14.29 GiB memory and 4.316796 seconds
+(EngineCore pid=4534) INFO 09-14 23:29:26 [gpu_worker.py:640] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.9000 is equivalent to --gpu-memory-
+(EngineCore pid=4534) INFO 09-14 23:29:26 [kv_cache_utils.py:2032] GPU KV cache size: 995,296 tokens, Maximum concurrency for 8,192 tokens per request: 121.50x
+(APIServer pid=4466) INFO 09-14 23:29:38 [entry.py:139] Starting vLLM server on http://0.0.0.0:8000
+(APIServer pid=4466) INFO:     Application startup complete.
+name, memory.used [MiB], memory.total [MiB], utilization.gpu [%], power.draw [W]
+NVIDIA H100 80GB HBM3, 72237 MiB, 81559 MiB, 0 %, 118.37 W

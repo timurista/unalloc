@@ -1,0 +1,15 @@
+# Step 6 - stop vLLM, copy results back (2026-09-14T23:41:00Z)
+$ ssh root@107.170.52.209 'bash remote.sh stop'; rsync -az root@107.170.52.209:/root/results/ case_studies/results/gpu_validation/raw/
+total 3392
+drwxr-xr-x  2 root root    4096 Sep 14 23:40 .
+drwx------ 13 root root    4096 Sep 14 23:29 ..
+-rw-r--r--  1 root root     820 Sep 14 23:23 download.log
+-rw-r--r--  1 root root     226 Sep 14 23:32 meta.json
+-rw-r--r--  1 root root   53604 Sep 14 23:41 nvidia_smi.csv
+-rw-r--r--  1 root root 1331431 Sep 14 23:40 rate_16.json
+-rw-r--r--  1 root root  238552 Sep 14 23:34 rate_2.json
+-rw-r--r--  1 root root  399013 Sep 14 23:36 rate_4.json
+-rw-r--r--  1 root root  697310 Sep 14 23:38 rate_8.json
+-rw-r--r--  1 root root  667196 Sep 14 23:41 vllm.log
+-rw-r--r--  1 root root   45047 Sep 14 23:25 vllm_attempt1_failed.log
+copied: download.log meta.json nvidia_smi.csv rate_16.json rate_2.json rate_4.json rate_8.json vllm_attempt1_failed.log vllm.log 

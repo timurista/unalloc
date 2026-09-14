@@ -1,0 +1,32 @@
+# Step 2 - copy the repository to the droplet (2026-09-14T23:22:57Z)
+$ rsync -az --exclude .git --exclude .cache --exclude case_studies/results --exclude paper --exclude blog --exclude docs --exclude __pycache__ ./ root@107.170.52.209:/root/unalloc/
+copied
+
+# Step 3 - install uv, vLLM and the repo; download Qwen/Qwen2.5-7B-Instruct (2026-09-14T23:22:59Z)
+$ ssh root@107.170.52.209 'bash /root/unalloc/case_studies/gpu_validation/remote.sh setup'
+ Downloaded llvmlite
+ Downloaded nvidia-curand
+ Downloaded nvidia-nvshmem-cu13
+ Downloaded opencv-python-headless
+ Downloaded nvidia-nvvm
+ Downloaded tokenspeed-triton
+ Downloaded nvidia-cutlass-dsl-libs-cu13
+ Downloaded nvidia-cutlass-dsl-libs-cu12
+ Downloaded nvidia-cuda-nvrtc
+ Downloaded nvidia-cusparse
+ Downloaded nvidia-cusparselt-cu13
+ Downloaded triton
+ Downloaded nvidia-cusolver
+ Downloaded nvidia-nccl-cu13
+ Downloaded nvidia-cufft
+ Downloaded vllm
+ Downloaded nvidia-cudnn-cu13
+ Downloaded nvidia-cublas
+ Downloaded torch
+Using Python 3.12.14 environment at: /opt/unalloc-venv
+   Building unalloc @ file:///root/unalloc
+download complete
+name, driver_version, memory.total [MiB]
+NVIDIA H100 80GB HBM3, 580.173.02, 81559 MiB
+vllm 0.29.0 torch 2.13.0+cu130 cuda True
+# setup finished: 2026-09-14T23:23:31Z

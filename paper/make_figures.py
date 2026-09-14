@@ -354,9 +354,55 @@ def use_cases() -> None:
     save(fig, "use_cases")
 
 
+def gpu_validation() -> None:
+    """Real vLLM on an H100: latency by load, and search's share under two meters."""
+    if not (RESULTS / "gpu_validation" / "metrics.json").exists():
+        return
+    runs = load("gpu_validation")["runs"]
+    rates = [r["rate_rps"] for r in runs]
+    fig, (a, b, c) = plt.subplots(1, 3, figsize=(6.4, 2.25))
+    for key, color in (("p50", CAT[0]), ("p95", CAT[1])):
+        a.plot(rates, [r["latency"]["all"]["ttft_s"][key] * 1e3 for r in runs], color=color,
+               marker="o", markersize=3.5, label=key)
+        b.plot(rates, [r["latency"]["all"]["tpot_s"][key] * 1e3 for r in runs], color=color,
+               marker="o", markersize=3.5, label=key)
+    a.set_title("Time to first token")
+    a.set_ylabel("ms")
+    b.set_title("Time per output token")
+    a.legend(fontsize=7)
+
+    def search(split: dict[str, float]) -> float:
+        return split["search"] / (1 - split.get("__overhead__", 0.0))
+
+    c.plot(rates, [search(r["meters"]["tokens"]) for r in runs], color=CAT[0], marker="o",
+           markersize=3.5, label="tokens (H100)")
+    c.plot(rates, [search(r["meters"]["time_share"]) for r in runs], color=CAT[1], marker="o",
+           markersize=3.5, label="time share (H100)")
+    # Simulator points only where it is not saturated, so the comparison is fair.
+    healthy = [r for r in runs if max(r["simulator"]["ttft_p50_s"].values()) < 1.0]
+    c.plot([r["rate_rps"] for r in healthy],
+           [search(r["simulator"]["shares"]["tokens"]) for r in healthy],
+           color=CAT[0], linestyle=(0, (2, 2)), marker="s", markersize=3, label="tokens (sim)")
+    c.plot([r["rate_rps"] for r in healthy],
+           [search(r["simulator"]["shares"]["compute"]) for r in healthy],
+           color=CAT[1], linestyle=(0, (2, 2)), marker="s", markersize=3, label="step time (sim)")
+    c.set_title("search's share of the bill")
+    c.yaxis.set_major_formatter(PercentFormatter(1.0, decimals=0))
+    for ax in (a, b, c):
+        ax.set_xscale("log", base=2)
+        ax.set_xticks(rates, [f"{r:g}" for r in rates])
+        ax.set_xlabel("requests/s")
+        ax.set_ylim(0, None)
+    # Headroom above the lines so the legend never sits on the data.
+    c.set_ylim(0, 0.36)
+    c.legend(fontsize=5.5, loc="upper center", ncol=2, handlelength=1.6, columnspacing=0.8)
+    fig.tight_layout(w_pad=1.8)
+    save(fig, "gpu_validation")
+
+
 def main() -> int:
     print(f"rendering figures into {OUT}")
-    for render in (kv_cache, torch_kv, distributed, hybrid, use_cases):
+    for render in (kv_cache, torch_kv, distributed, hybrid, use_cases, gpu_validation):
         render()
     return 0
 

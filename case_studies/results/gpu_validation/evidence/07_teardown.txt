@@ -1,0 +1,29 @@
+# Step 7 - tear down and verify (2026-09-14T23:41:06Z)
+$ doctl compute droplet delete --tag-name unalloc-gpu-validation --force
+delete requested
+# verified at: 2026-09-14T23:41:08Z
+$ doctl compute droplet list --tag-name unalloc-gpu-validation
+ID    Name    Public IPv4    Private IPv4    Public IPv6    Memory    VCPUs    Disk    Region    Image    VPC UUID    Status    Tags    Features    Volumes
+$ doctl compute droplet get 600500094
+ID           Name                           Public IPv4       Private IPv4    Public IPv6    Memory    VCPUs    Disk    Region    Image                              VPC UUID                                Status    Tags    Features                            Volumes
+600500094    unalloc-gpu-validation-h100    107.170.52.209    10.100.0.2                     245760    20       720     nyc2      Ubuntu NVIDIA AI/ML Ready Image    91bc5ae5-ba87-47b7-8e36-0487b33cdfb1    active            droplet_agent,private_networking    
+$ doctl compute droplet list --format ID,Name,Size   # any GPU droplets left on the account?
+ID           Name                                                        Size Slug
+
+# Step 7b - the tag listing emptied before the droplet was gone, so delete and verify by ID (2026-09-14T23:41:25Z)
+$ doctl compute droplet delete 600500094 --force
+Error: Unable to delete Droplet 600500094: DELETE https://api.digitalocean.com/v2/droplets/600500094: 404 (request "dccbc856-f6f6-4330-957b-58098fef8f24") The resource you were accessing could not be found.
+# checked at: 2026-09-14T23:41:26Z
+$ doctl compute droplet get 600500094
+Error: GET https://api.digitalocean.com/v2/droplets/600500094: 404 (request "04a3a015-60dc-48f0-8614-1d62fe391f21") The resource you were accessing could not be found.
+$ doctl compute droplet list --format ID,Name,SizeSlug,Status
+ID           Name                                                        Size Slug                  Status
+535331456    temporal1224onubuntu2204-s-2vcpu-4gb-120gb-intel-sfo2-01    s-2vcpu-4gb-120gb-intel    active
+572988413    pool-4qm6sxdid-38xju0                                       s-2vcpu-4gb                active
+572988535    pool-4qm6sxdid-38xjxa                                       s-2vcpu-4gb                active
+576309736    pool-4qm6sxdid-3u28zp                                       s-2vcpu-4gb                active
+592838558    pool-4qm6sxdid-3mtnn0                                       s-2vcpu-4gb                active
+599668646    pool-4qm6sxdid-3fwrr6                                       s-2vcpu-4gb                active
+$ curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://107.170.52.209:8000/health
+000
+no response (connection failed)
