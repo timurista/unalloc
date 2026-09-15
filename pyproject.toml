@@ -40,6 +40,7 @@ research = [
   "ipykernel>=6.29",
   "jupyterlab>=4.2",
   "psycopg[binary]>=3.2",
+  "markdown>=3.6",
 ]
 
 [project.urls]
@@ -69,8 +70,12 @@ extend-exclude = ["*.ipynb"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 ignore = ["B008"]
-# Figure labels use real typographic signs ("36×", "÷").
-allowed-confusables = ["×", "÷"]
+# Figure labels and page copy use real typographic signs ("36×", "÷", "12–14").
+allowed-confusables = ["×", "÷", "–"]
+
+[tool.ruff.lint.per-file-ignores]
+# HTML page templates; wrapping them for line length hurts more than it helps.
+"docs_build/__main__.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Addendum: Verified on a Real H100</title>
+<meta name="description" content="An attachment to &quot;Who Pays for the KV Cache?&quot;. The main post&#x27;s PyTorch timings came from a CPU. This addendum re-runs the metering experiment with production serving software on a datacenter GPU, and shows exactly how the machine was brought up, verified and torn down.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,600;87.5,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="../index.html">unalloc</a>
+  <nav aria-label="Site"><a href="../index.html">Overview</a><a href="../paper/unalloc-case-studies.pdf">Paper (PDF)</a><a href="../blog/who-pays-for-the-kv-cache.html">Blog post</a><a href="../blog/gpu-validation.html" aria-current="page">GPU addendum</a><a href="../explorer.html">Explorer</a><a href="https://github.com/timurista/unalloc">GitHub</a></nav>
+</div></header>
+<main><article class="post"><a class="crumb" href="../index.html">← unalloc overview</a><h1>Addendum: Verified on a Real H100</h1>
+<p><em>An attachment to "<a href="who-pays-for-the-kv-cache.html">Who Pays for the KV Cache?</a>". The main post's PyTorch timings came from a CPU. This addendum re-runs the metering experiment with production serving software on a datacenter GPU, and shows exactly how the machine was brought up, verified and torn down.</em></p>
+<hr />
+<h2>TL;DR</h2>
+<ul>
+<li><strong>The main finding holds on real hardware.</strong> On an NVIDIA H100 running vLLM, token-based showback charged the RAG tenant <strong>12–14 percentage points</strong> more of the bill than its measured share of serving time, at every load I tested.</li>
+<li><strong>GPU "utilization" is not a cost signal.</strong> <code>nvidia-smi</code> reported <strong>97% utilization at 2 requests/s and 99% at 16 requests/s</strong>, while throughput rose 7×. Power draw was the honest signal: 469 W → 660 W.</li>
+<li><strong>Latency stayed low.</strong> Median time to first token was 26–51 ms and median time per output token 6.3–12.2 ms, even at 16 requests/s with no requests queued.</li>
+<li><strong>My simulator was too pessimistic.</strong> Its latency model saturates at 8 requests/s; the real H100 never queued a request at 16. The attribution <em>shares</em> still agreed in direction, but the simulator needs calibrating.</li>
+<li><strong>The whole run cost about $2.15</strong>: 29 minutes of a $4.41/hour DigitalOcean GPU Droplet.</li>
+</ul>
+<h2>The machine</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Provider</td>
+<td>DigitalOcean GPU Droplet <code>gpu-h100x1-80gb</code>, region <code>nyc2</code></td>
+</tr>
+<tr>
+<td>Image</td>
+<td>DigitalOcean "NVIDIA AI/ML Ready" (Ubuntu 22.04.5 LTS)</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td>1× NVIDIA H100 80GB HBM3 · driver 580.173.02 · CUDA 13.0 · 700 W limit</td>
+</tr>
+<tr>
+<td>CPU / RAM</td>
+<td>20 vCPU Intel Xeon Platinum 8468 · 235 GB</td>
+</tr>
+<tr>
+<td>Serving</td>
+<td>vLLM 0.29.0 · PyTorch 2.13.0+cu130 · Python 3.12</td>
+</tr>
+<tr>
+<td>Model</td>
+<td><code>Qwen/Qwen2.5-7B-Instruct</code>, bf16, 8,192-token context, prefix caching on</td>
+</tr>
+<tr>
+<td>KV cache</td>
+<td>995,296 tokens (14.3 GiB of weights, 72 GB of GPU memory in use)</td>
+</tr>
+<tr>
+<td>Lifetime</td>
+<td>created 23:11:49 UTC, deleted 23:41:08 UTC on 2026-09-14</td>
+</tr>
+</tbody>
+</table></div>
+<p>Everything in the table was captured from the machine itself, not typed from a spec sheet:</p>
+<p><img alt="doctl: the droplet" src="../assets/gpu-evidence/01-droplet.png" /></p>
+<p><img alt="nvidia-smi on the droplet" src="../assets/gpu-evidence/02-gpu.png" /></p>
+<p><img alt="vLLM serving the model" src="../assets/gpu-evidence/03-vllm.png" /></p>
+<h2>What ran</h2>
+<p>The benchmark client reused the serving simulator's four tenants: <strong>search</strong> (RAG with long prompts and short answers), <strong>agents</strong> (multi-turn sessions that re-send the conversation), <strong>platform</strong>, and an unlabeled <strong>sandbox</strong> key. Prompts were sent as token IDs, so lengths were exact and shared system prompts were byte-identical, which is what prefix caching keys on. Output lengths were forced with <code>min_tokens</code> and <code>ignore_eos</code>, and decoding was greedy.</p>
+<p>After a 10-second warm-up that would abort on any error, the client ran two minutes each at 2, 4, 8 and 16 requests/s. It ran <strong>on the droplet, next to the server</strong>, so the latency numbers measure serving, not the internet. For scale: my laptop's round trip to the droplet was 91 ms, which a remote user would add on top.</p>
+<p><img alt="the benchmark sweep" src="../assets/gpu-evidence/04-bench.png" /></p>
+<h2>Results</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Load</th>
+<th style="text-align: right;">Requests</th>
+<th style="text-align: right;">Errors</th>
+<th style="text-align: right;">Output tok/s</th>
+<th style="text-align: right;">Prefix-cache hits</th>
+<th style="text-align: right;">TTFT p50 / p95</th>
+<th style="text-align: right;">Time per token p50</th>
+<th style="text-align: right;">GPU util</th>
+<th style="text-align: right;">Power</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2 req/s</td>
+<td style="text-align: right;">446</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">773</td>
+<td style="text-align: right;">67%</td>
+<td style="text-align: right;">28 / 44 ms</td>
+<td style="text-align: right;">6.3 ms</td>
+<td style="text-align: right;">97%</td>
+<td style="text-align: right;">469 W</td>
+</tr>
+<tr>
+<td>4 req/s</td>
+<td style="text-align: right;">862</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1,479</td>
+<td style="text-align: right;">79%</td>
+<td style="text-align: right;">26 / 43 ms</td>
+<td style="text-align: right;">6.7 ms</td>
+<td style="text-align: right;">99%</td>
+<td style="text-align: right;">499 W</td>
+</tr>
+<tr>
+<td>8 req/s</td>
+<td style="text-align: right;">1,638</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2,761</td>
+<td style="text-align: right;">78%</td>
+<td style="text-align: right;">29 / 47 ms</td>
+<td style="text-align: right;">7.4 ms</td>
+<td style="text-align: right;">99%</td>
+<td style="text-align: right;">547 W</td>
+</tr>
+<tr>
+<td>16 req/s</td>
+<td style="text-align: right;">3,295</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5,389</td>
+<td style="text-align: right;">66%</td>
+<td style="text-align: right;">51 / 99 ms</td>
+<td style="text-align: right;">12.2 ms</td>
+<td style="text-align: right;">99%</td>
+<td style="text-align: right;">660 W</td>
+</tr>
+</tbody>
+</table></div>
+<p><img alt="H100 latency and search's share of the bill" src="../assets/figures/gpu_validation.png" /></p>
+<h3>1. Token metering still mis-prices the RAG tenant</h3>
+<p>I computed the same meters as in the main post, this time from real telemetry: token counts from the server's usage block, and a time-share meter that splits every 50 ms of wall time equally across in-flight requests.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Load</th>
+<th style="text-align: right;">search · tokens</th>
+<th style="text-align: right;">search · time share</th>
+<th style="text-align: right;">Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2 req/s</td>
+<td style="text-align: right;">16.5%</td>
+<td style="text-align: right;">4.8%</td>
+<td style="text-align: right;">+11.7 pts</td>
+</tr>
+<tr>
+<td>4 req/s</td>
+<td style="text-align: right;">16.6%</td>
+<td style="text-align: right;">4.7%</td>
+<td style="text-align: right;">+11.9 pts</td>
+</tr>
+<tr>
+<td>8 req/s</td>
+<td style="text-align: right;">17.2%</td>
+<td style="text-align: right;">4.6%</td>
+<td style="text-align: right;">+12.6 pts</td>
+</tr>
+<tr>
+<td>16 req/s</td>
+<td style="text-align: right;">18.9%</td>
+<td style="text-align: right;">5.2%</td>
+<td style="text-align: right;">+13.7 pts</td>
+</tr>
+</tbody>
+</table></div>
+<p>At 2 requests/s the simulator predicted 18.3% by tokens against 8.9% by step time, a 9.4-point gap. The H100 confirms the direction and roughly the size. Search's answers finished in 0.26–0.51 s at the median, while an agent turn took 1.8–3.3 s, and a token meter can't see that difference.</p>
+<h3>2. "The GPU is at 99%" tells you nothing about cost</h3>
+<p>Continuous batching keeps some request in flight almost all the time: vLLM reported at least one running request in 97–100% of samples at every load. <code>nvidia-smi</code>'s utilization counter tracks that, not how hard the GPU is working. Meanwhile the KV cache was between 0.7% and 8% full, because a 995,296-token pool is provisioned for peaks.</p>
+<p>If your chargeback divides a GPU bill by "utilization", a pod serving 773 tokens/s and one serving 5,389 tokens/s look identical. <strong>Power draw</strong> (469 W → 660 W) and <strong>tokens processed</strong> moved with load; utilization didn't.</p>
+<h3>3. Where the simulator was wrong</h3>
+<p>The simulator's step-latency constants were set by hand for an 8B model on an H100. Against the real engine it matched throughput below saturation (737 vs 773 output tokens/s at 2 requests/s), but it saturates at 8 requests/s, with multi-second time to first token, while the real server handled 16 requests/s with nothing queued. The model also differs: Qwen2.5-7B's grouped-query attention stores about 57 KB of KV per token against the simulator's 131 KB. Calibrating the simulator's constants from this run is the obvious next step. Until then, trust its <em>shares</em>, not its latency.</p>
+<h2>How I brought it up, verified it, and tore it down</h2>
+<p>The full, copy-pasteable runbook is in the repo at <a href="https://github.com/timurista/unalloc/blob/main/case_studies/gpu_validation/RUNBOOK.md"><code>case_studies/gpu_validation/RUNBOOK.md</code></a>, with every command's captured output under <a href="https://github.com/timurista/unalloc/tree/main/case_studies/results/gpu_validation/evidence"><code>case_studies/results/gpu_validation/evidence/</code></a>. In short:</p>
+<ol>
+<li><strong>Dry-run first, for free.</strong> A fake vLLM server on my laptop exercised the benchmark client before any GPU was rented.</li>
+<li><strong>Create the droplet</strong> with <code>doctl compute droplet create … --size gpu-h100x1-80gb --image gpu-h100x1-base --tag-names unalloc-gpu-validation</code>. The cheaper 48 GB L40S and RTX 6000 Ada sizes ($1.57/h) had no capacity in any region that day.</li>
+<li><strong>Arm a watchdog immediately:</strong> a local background job that deletes anything with the tag after 55 minutes, whatever else happens.</li>
+<li><strong>Verify the hardware</strong> with <code>nvidia-smi</code>, <code>lscpu</code> and DigitalOcean's own droplet record, before installing anything.</li>
+<li><strong>Install and serve:</strong> <code>uv</code>, vLLM and the repo, with the 15 GB model downloading in parallel. Setup took about 10 minutes.</li>
+<li><strong>Benchmark</strong>, copy the raw results back, then <strong>delete the droplet</strong>.</li>
+<li><strong>Verify by ID, not by tag.</strong> Deleting by tag detaches the tag first, so the tag listing went empty while <code>doctl compute droplet get &lt;id&gt;</code> still showed the droplet <code>active</code>. I deleted by ID and waited for a 404 before stopping the watchdog.</li>
+</ol>
+<p><img alt="teardown, verified" src="../assets/gpu-evidence/05-teardown.png" /></p>
+<p>Two things went wrong, and both are in the evidence rather than edited out:</p>
+<ul>
+<li><strong>vLLM's first start failed.</strong> Version 0.29.0 JIT-compiles a FlashInfer sampling kernel during warm-up, and that build failed on this image. Setting <code>VLLM_USE_FLASHINFER_SAMPLER=0</code> falls back to the PyTorch sampler, which gives identical results for greedy decoding. The failed log is kept as <code>vllm_attempt1_failed.log.gz</code>.</li>
+<li><strong>A shell quirk cost me four minutes.</strong> zsh doesn't word-split an <code>ssh …</code> command stored in a variable, so my first setup command never ran. A shell function fixed it.</li>
+</ul>
+<h2>Caveats</h2>
+<ul>
+<li>One GPU and one model, with a two-minute window per load level and a single run each.</li>
+<li>The time-share meter splits wall time across in-flight requests, including any queueing. The server reported zero waiting requests throughout, so here that is serving time.</li>
+<li>Multi-turn prompts append synthetic assistant tokens rather than the model's actual output, so prefix reuse across turns covers the previous prompt but not the previous answer.</li>
+<li>Prices are DigitalOcean's on-demand list prices on the day of the run.</li>
+</ul>
+<h2>Reproduce it</h2>
+<pre><code class="language-bash">python -m case_studies.gpu_validation.fake_server --port 8011 &amp;           # free dry run
+# then follow case_studies/gpu_validation/RUNBOOK.md on any single-GPU machine
+python -m case_studies.gpu_validation.analyze                              # local analysis
+python -m case_studies.gpu_validation.render_evidence                      # the images above
+</code></pre>
+<p><em>Code and raw data: <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a>. All figures and terminal captures are by the author.</em></p></article></main>
+<footer class="site"><div class="wrap">
+  <span>Apache-2.0</span>
+  <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a>
+  <a href="https://doi.org/10.5281/zenodo.22761013">doi:10.5281/zenodo.22761013</a>
+  <span>Generated from the repository by <code>make pages</code></span>
+</div></footer>
+</body>
+</html>

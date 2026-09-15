@@ -41,8 +41,8 @@ docker:              ## Build the container image
 release-check: build ## Validate sdist/wheel metadata as PyPI will render it
 	pip install -q twine && twine check --strict dist/*
 
-pages:               ## Rebuild the public explorer served by GitHub Pages from docs/
-	python -m case_studies.ui --export docs/index.html
+pages:               ## Rebuild the GitHub Pages site in docs/ (landing, blog, paper, explorer)
+	python -m docs_build
 
 # --- case studies & paper ------------------------------------------------------
 

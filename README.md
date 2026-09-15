@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/timurista/unalloc/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://github.com/timurista/unalloc/blob/main/pyproject.toml)
 [![Paper](https://img.shields.io/badge/paper-PDF-1f5b45.svg)](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf)
-[![Explorer](https://img.shields.io/badge/explorer-live-1f5b45.svg)](https://timurista.github.io/unalloc/)
+[![Explorer](https://img.shields.io/badge/explorer-live-1f5b45.svg)](https://timurista.github.io/unalloc/explorer.html)
 [![DOI](https://zenodo.org/badge/1368528624.svg)](https://doi.org/10.5281/zenodo.22761012)
 
 OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Neither tells you what a single AI feature costs, because the two live in different systems with different keys. `unalloc` pulls both into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team.
@@ -170,7 +170,7 @@ make ui                  # ledger explorer on http://127.0.0.1:8765
 
 ![Share of a shared vLLM pod's bill under five metering rules](https://raw.githubusercontent.com/timurista/unalloc/main/paper/figures/kv_shares.png)
 
-The **[ledger explorer](https://timurista.github.io/unalloc/)** (or `python -m case_studies.ui` locally) shows every dataset row by row: pick the label that means "owner", add fallbacks, and watch each row resolve to a team, a fallback value, or the backlog. `python -m case_studies.ui --export explorer.html` writes a self-contained copy you can share.
+The **[ledger explorer](https://timurista.github.io/unalloc/explorer.html)** (or `python -m case_studies.ui` locally) shows every dataset row by row: pick the label that means "owner", add fallbacks, and watch each row resolve to a team, a fallback value, or the backlog. `python -m case_studies.ui --export explorer.html` writes a self-contained copy you can share.
 
 ## Development environment
 

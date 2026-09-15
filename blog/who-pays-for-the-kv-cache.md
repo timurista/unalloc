@@ -133,6 +133,6 @@ make paper           # figures + PDF
 make ui              # the ledger explorer at http://127.0.0.1:8765
 ```
 
-If you'd rather click than clone, the [ledger explorer](https://timurista.github.io/unalloc/) runs every dataset from this post in your browser: pick the label that means "owner", add fallbacks, and watch each row resolve. There's also a companion notebook (`case_studies/unalloc_case_studies.ipynb`) and a dev container with a small Postgres if you'd rather not touch your machine. If you run a gateway or OpenCost in production, a scrubbed payload from your provider is the most useful contribution you could make.
+If you'd rather click than clone, the [ledger explorer](https://timurista.github.io/unalloc/explorer.html) runs every dataset from this post in your browser: pick the label that means "owner", add fallbacks, and watch each row resolve. There's also a companion notebook (`case_studies/unalloc_case_studies.ipynb`) and a dev container with a small Postgres if you'd rather not touch your machine. If you run a gateway or OpenCost in production, a scrubbed payload from your provider is the most useful contribution you could make.
 
 *Code: [github.com/timurista/unalloc](https://github.com/timurista/unalloc) · Paper: [unalloc-case-studies.pdf](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf) · All figures are by the author.*
