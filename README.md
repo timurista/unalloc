@@ -9,6 +9,8 @@
 [![Explorer](https://img.shields.io/badge/explorer-live-1f5b45.svg)](https://timurista.github.io/unalloc/explorer.html)
 [![DOI](https://zenodo.org/badge/1368528624.svg)](https://doi.org/10.5281/zenodo.22761012)
 
+**Project site: [timurista.github.io/unalloc](https://timurista.github.io/unalloc/)**, with the findings, case studies, [paper (PDF)](https://timurista.github.io/unalloc/paper/unalloc-case-studies.pdf), [blog post](https://timurista.github.io/unalloc/blog/who-pays-for-the-kv-cache.html), [GPU addendum](https://timurista.github.io/unalloc/blog/gpu-validation.html) and [ledger explorer](https://timurista.github.io/unalloc/explorer.html).
+
 OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Neither tells you what a single AI feature costs, because the two live in different systems with different keys. `unalloc` pulls both into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team.
 
 ## The output
@@ -149,7 +151,7 @@ Two design choices worth calling out:
 
 ## Case studies and paper
 
-Five studies push real (or realistically simulated) inference workloads through unalloc's own adapters. They exposed nine defects in the tool along the way, all fixed with regression tests, and they're written up as a paper: **[paper/unalloc-case-studies.pdf](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf)**.
+Six studies push real (or realistically simulated) inference workloads through unalloc's own adapters, including a run with vLLM on an NVIDIA H100. They exposed nine defects in the tool along the way, all fixed with regression tests, and they're written up as a paper: **[paper/unalloc-case-studies.pdf](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf)**. For the readable version, see the [blog post](https://timurista.github.io/unalloc/blog/who-pays-for-the-kv-cache.html) and the [GPU addendum](https://timurista.github.io/unalloc/blog/gpu-validation.html) on the [project site](https://timurista.github.io/unalloc/).
 
 | Study | What runs | Headline |
 | --- | --- | --- |
