@@ -1,11 +1,16 @@
-"""Render every paper figure from case_studies/results/*/metrics.json.
+"""Render every figure from case_studies/results/*/metrics.json, in two themes.
 
     python -m paper.make_figures
 
-Figures are written as SVG (text converted to paths, so Typst needs no fonts)
-plus PNG for the README. Colors follow one fixed categorical order so a tenant
-or source keeps its hue across figures; status colors appear only where the
-mark means good / warning / critical.
+* paper  (paper/figures/*.svg, *.png)       light, for the PDF, README and Medium
+* ledger (paper/figures/ledger/*.png)       dark, on the timurista.ai "Ledger" system,
+                                            for the project site and timurista.ai
+
+SVG text is converted to paths, so Typst needs no fonts. A tenant or source
+keeps its hue across figures within a theme. In the ledger theme rose is
+reserved for spend with no owner and is always hatched as well as colored,
+and the categorical order was checked for color-vision separation on the
+dark surface.
 """
 
 from __future__ import annotations
@@ -23,42 +28,104 @@ from matplotlib.ticker import FuncFormatter, PercentFormatter
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "case_studies" / "results"
+
+THEMES: dict[str, dict[str, Any]] = {
+    "paper": {
+        "out": ROOT / "paper" / "figures",
+        "formats": ("svg", "png"),
+        "ink": "#17201b", "ink_2": "#4f5b54", "grid": "#e4e7e3", "axis": "#b9c2bb",
+        "face": "#ffffff", "edge": "#ffffff",
+        "cat": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"],
+        "neutral": "#c9cfca",
+        "good": "#0ca30c", "warn": "#fab219", "crit": "#d03b3b",
+        "tenant_order": ["search", "agents", "platform", "sandbox"],
+        "tenant": {"search": 0, "agents": 1, "platform": 2, "sandbox": 3},
+        "source": {"opencost": 0, "litellm": 1, "openai": 2, "anthropic": 3},
+        "dark_label": {2, 3},
+        "hatch": set(),
+    },
+    "ledger": {
+        "out": ROOT / "paper" / "figures" / "ledger",
+        "formats": ("png",),
+        "ink": "#E8EDF3", "ink_2": "#9AA6B5", "grid": "#1F2833", "axis": "#2A3441",
+        "face": "#0F141B", "edge": "#0F141B",
+        # teal, blue, violet, rose. Blue and violet are never stacked next to each other.
+        "cat": ["#1FA88C", "#3F7FE0", "#9A79E6", "#D9634F"],
+        "neutral": "#3A4553",
+        "good": "#1FA88C", "warn": "#9A79E6", "crit": "#D9634F",
+        "tenant_order": ["agents", "search", "platform", "sandbox"],
+        "tenant": {"search": 0, "agents": 1, "platform": 2, "sandbox": 3},
+        # Stacked in this order (violet, teal, blue, magenta); checked for CVD separation.
+        "source": {"openai": 2, "opencost": 0, "litellm": 1, "anthropic": None},
+        "source_extra": "#C75A9E",
+        "dark_label": {0, 3},
+        # Categories that mean "nobody owns this": hatched as well as colored.
+        "hatch": {"sandbox", "unowned", "__overhead__", "idle"},
+    },
+}
+
+# Set by use_theme(); the render functions below read these module globals.
+INK = INK_2 = GRID = AXIS = EDGE = NEUTRAL = GOOD = WARN = CRIT = ""
+CAT: list[str] = []
+TENANT: dict[str, str] = {}
+TENANT_ORDER: list[str] = []
+SOURCE: dict[str, str] = {}
+SOURCE_ORDER: list[str] = []
+ON_FILL: dict[str, str] = {}
+HATCH: set[str] = set()
 OUT = ROOT / "paper" / "figures"
+FORMATS: tuple[str, ...] = ("svg", "png")
 
-INK, INK_2, GRID, AXIS = "#17201b", "#4f5b54", "#e4e7e3", "#b9c2bb"
-CAT = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]
-NEUTRAL = "#c9cfca"
-GOOD, WARN, CRIT = "#0ca30c", "#fab219", "#d03b3b"
-TENANT = {"search": CAT[0], "agents": CAT[1], "platform": CAT[2], "sandbox": CAT[3]}
-SOURCE = {"opencost": CAT[0], "litellm": CAT[1], "openai": CAT[2], "anthropic": CAT[3]}
-# Label ink per fill, chosen by fill luminance.
-ON_FILL = {CAT[0]: "white", CAT[1]: "white", CAT[2]: INK, CAT[3]: INK, NEUTRAL: INK,
-           GOOD: "white", WARN: INK, CRIT: "white"}
 
-plt.rcParams.update(
-    {
-        "font.family": "DejaVu Sans",
-        "font.size": 8,
-        "axes.titlesize": 9,
-        "axes.titleweight": "bold",
-        "axes.titlelocation": "left",
-        "axes.edgecolor": AXIS,
-        "axes.labelcolor": INK_2,
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "axes.grid": True,
-        "axes.axisbelow": True,
-        "grid.color": GRID,
-        "grid.linewidth": 0.6,
-        "xtick.color": INK_2,
-        "ytick.color": INK_2,
-        "text.color": INK,
-        "legend.frameon": False,
-        "lines.linewidth": 2,
-        "lines.solid_capstyle": "round",
-        "svg.fonttype": "path",
-    }
-)
+def use_theme(name: str) -> None:
+    global INK, INK_2, GRID, AXIS, EDGE, NEUTRAL, GOOD, WARN, CRIT, CAT, TENANT, TENANT_ORDER
+    global SOURCE, SOURCE_ORDER, ON_FILL, HATCH, OUT, FORMATS
+    t = THEMES[name]
+    INK, INK_2, GRID, AXIS, EDGE = t["ink"], t["ink_2"], t["grid"], t["axis"], t["edge"]
+    NEUTRAL, GOOD, WARN, CRIT = t["neutral"], t["good"], t["warn"], t["crit"]
+    CAT = list(t["cat"])
+    TENANT = {k: CAT[i] for k, i in t["tenant"].items()}
+    TENANT_ORDER = list(t["tenant_order"])
+    SOURCE = {k: (CAT[i] if i is not None else t["source_extra"]) for k, i in t["source"].items()}
+    SOURCE_ORDER = list(t["source"])
+    dark = "#07090D" if name == "ledger" else INK
+    ON_FILL = {c: (dark if i in t["dark_label"] else "white") for i, c in enumerate(CAT)}
+    ON_FILL.update({NEUTRAL: INK, GOOD: dark, WARN: "white",
+                    CRIT: dark if name == "ledger" else "white"})
+    HATCH = set(t["hatch"])
+    OUT, FORMATS = t["out"], t["formats"]
+    plt.rcParams.update(
+        {
+            "font.family": "DejaVu Sans",
+            "font.size": 8,
+            "axes.titlesize": 9,
+            "axes.titleweight": "bold",
+            "axes.titlelocation": "left",
+            "axes.edgecolor": AXIS,
+            "axes.labelcolor": INK_2,
+            "axes.facecolor": t["face"],
+            "figure.facecolor": t["face"],
+            "savefig.facecolor": t["face"],
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.grid": True,
+            "axes.axisbelow": True,
+            "grid.color": GRID,
+            "grid.linewidth": 0.6,
+            "xtick.color": INK_2,
+            "ytick.color": INK_2,
+            "text.color": INK,
+            "legend.frameon": False,
+            "lines.linewidth": 2,
+            "lines.solid_capstyle": "round",
+            "hatch.color": "#07090D" if name == "ledger" else "#ffffff",
+            "hatch.linewidth": 0.8,
+            "svg.fonttype": "path",
+        }
+    )
+
+
+use_theme("paper")
 
 
 def load(study: str) -> dict[str, Any]:
@@ -67,8 +134,8 @@ def load(study: str) -> dict[str, Any]:
 
 def save(fig: plt.Figure, name: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT / f"{name}.svg", bbox_inches="tight")
-    fig.savefig(OUT / f"{name}.png", dpi=220, bbox_inches="tight")
+    for fmt in FORMATS:
+        fig.savefig(OUT / f"{name}.{fmt}", dpi=220, bbox_inches="tight")
     plt.close(fig)
     print(f"  {name}")
 
@@ -92,11 +159,13 @@ def stacked_share_bars(
             value = parts.get(key, 0.0)
             if value <= 0:
                 continue
-            ax.barh(i, value, left=left, height=0.62, color=colors[key], edgecolor="white",
-                    linewidth=1.2)
+            ax.barh(i, value, left=left, height=0.62, color=colors[key], edgecolor=EDGE,
+                    linewidth=1.2, hatch="////" if key in HATCH else None)
             if value >= min_label:
                 ax.text(left + value / 2, i, f"{value:.0%}", ha="center", va="center",
-                        fontsize=7, color=ON_FILL.get(colors[key], INK))
+                        fontsize=7, color=ON_FILL.get(colors[key], INK),
+                        bbox={"boxstyle": "round,pad=0.15", "fc": colors[key], "ec": "none"}
+                        if key in HATCH else None)
             left += value
     ax.set_yticks(range(len(rows)), [label for label, _ in rows])
     ax.invert_yaxis()
@@ -104,7 +173,11 @@ def stacked_share_bars(
     ax.xaxis.set_major_formatter(PercentFormatter(1.0))
     ax.grid(axis="y", visible=False)
     ax.tick_params(axis="y", length=0)
-    return [Patch(color=colors[k], label=(names or {}).get(k, k)) for k in order]
+    return [
+        Patch(facecolor=colors[k], edgecolor=EDGE, hatch="////" if k in HATCH else None,
+              label=(names or {}).get(k, k))
+        for k in order
+    ]
 
 
 def legend_above(ax: plt.Axes, ncol: int, handles: list[Patch] | None = None) -> None:
@@ -120,7 +193,7 @@ def kv_cache() -> None:
     split = m["headline"]["shares"]
     names = {"tokens": "raw tokens", "list_price": "list-price tokens", "compute": "step time",
              "memory": "KV block-seconds", "blended": "blended"}
-    order = ["search", "agents", "platform", "sandbox", "__overhead__"]
+    order = [*TENANT_ORDER, "__overhead__"]
     colors = {**TENANT, "__overhead__": NEUTRAL}
     fig, ax = plt.subplots(figsize=(6.4, 2.3))
     handles = stacked_share_bars(ax, [(names[k], split[k]) for k in names], order, colors,
@@ -197,7 +270,7 @@ def torch_kv() -> None:
     }
     fig, ax = plt.subplots(figsize=(6.4, 2.7))
     handles = stacked_share_bars(ax, [(names[k], att["shares"][k]) for k in names],
-                                 ["search", "agents", "platform", "sandbox"], TENANT)
+                                 TENANT_ORDER, TENANT)
     ax.axhline(3.5, color=AXIS, linewidth=0.8)
     ax.set_title("A real transformer's serving bill, split seven ways", pad=18)
     legend_above(ax, 4, handles)
@@ -222,8 +295,8 @@ def distributed() -> None:
         tps.append(t["tokens_per_s"])
     fig, (a, b) = plt.subplots(1, 2, figsize=(6.4, 2.3), gridspec_kw={"width_ratios": [3, 2]})
     ys = range(len(labels))
-    a.barh(ys, compute, height=0.6, color=CAT[0], edgecolor="white", linewidth=1.2, label="compute")
-    a.barh(ys, comm, left=compute, height=0.6, color=CAT[1], edgecolor="white", linewidth=1.2,
+    a.barh(ys, compute, height=0.6, color=CAT[0], edgecolor=EDGE, linewidth=1.2, label="compute")
+    a.barh(ys, comm, left=compute, height=0.6, color=CAT[1], edgecolor=EDGE, linewidth=1.2,
            label="in collectives / waiting on a peer")
     for y, (c1, c2) in enumerate(zip(compute, comm, strict=True)):
         share = c2 / (c1 + c2) if c1 + c2 else 0
@@ -286,11 +359,11 @@ def hybrid() -> None:
             ("every source on", sc["B_all_sources"]["by_source"])]
     for y, (_, by_source) in enumerate(rows):
         left = 0.0
-        for src in ("opencost", "litellm", "openai", "anthropic"):
+        for src in SOURCE_ORDER:
             v = float(by_source.get(src, 0)) / 1000
             if v <= 0:
                 continue
-            a.barh(y, v, left=left, height=0.6, color=SOURCE[src], edgecolor="white", linewidth=1.2,
+            a.barh(y, v, left=left, height=0.6, color=SOURCE[src], edgecolor=EDGE, linewidth=1.2,
                    label=src if y == 1 else None)
             left += v
         a.text(left + 0.6, y, f"${left:,.1f}K", va="center", fontsize=7, color=INK_2)
@@ -401,9 +474,11 @@ def gpu_validation() -> None:
 
 
 def main() -> int:
-    print(f"rendering figures into {OUT}")
-    for render in (kv_cache, torch_kv, distributed, hybrid, use_cases, gpu_validation):
-        render()
+    for theme in THEMES:
+        use_theme(theme)
+        print(f"rendering {theme} figures into {OUT}")
+        for render in (kv_cache, torch_kv, distributed, hybrid, use_cases, gpu_validation):
+            render()
     return 0
 
 

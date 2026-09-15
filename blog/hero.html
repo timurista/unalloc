@@ -3,59 +3,61 @@
 <head>
 <meta charset="utf-8">
 <title>Who pays for the KV cache — header image</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500&display=swap">
 <style>
-  /* Rendered once to hero.png at 1400x788 (Medium's recommended header ratio). */
+  /* Rendered once to hero.png at 1400x788 (Medium's recommended header ratio).
+     timurista.ai "Ledger" palette. Segments run agents, search, platform, sandbox so blue
+     and violet never touch; sandbox has no owner, so it is rose and hatched. */
   :root {
-    --ground: #121614; --panel: #1a1f1c; --ink: #eef2ee; --ink-2: #b9c3bc; --muted: #7f8a83;
-    --rule: #2f3833; --accent: #7cc4a4;
-    --search: #3987e5; --agents: #d95926; --platform: #199e70; --sandbox: #c98500;
+    --ground: #0B0F14; --ink: #E8EDF3; --ink-2: #C9D2DC; --muted: #7C8898;
+    --rule: #1F2833; --signal: #35D0B0; --rose: #EF7A6D;
+    --search: #1FA88C; --agents: #3F7FE0; --platform: #9A79E6; --sandbox: #D9634F;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
   body { width: 1400px; height: 788px; background: var(--ground); color: var(--ink);
-         font-family: "IBM Plex Sans", system-ui, sans-serif; overflow: hidden; }
+         font-family: Inter, system-ui, sans-serif; overflow: hidden; }
   .frame { position: absolute; inset: 0; padding: 64px 76px; display: grid;
            grid-template-rows: auto 1fr auto; gap: 28px; }
-  .kicker { font: 500 18px "IBM Plex Mono", monospace; color: var(--accent); letter-spacing: 0.02em; }
-  h1 { font-family: "Archivo", sans-serif; font-stretch: 87.5%; font-weight: 700; font-size: 84px;
-       line-height: 0.98; letter-spacing: -0.02em; margin: 14px 0 0; max-width: 1000px; }
+  .kicker { font: 500 18px "JetBrains Mono", monospace; color: var(--signal); letter-spacing: 0.02em; }
+  h1 { font-family: "Inter Tight", sans-serif; font-weight: 700; font-size: 84px;
+       line-height: 0.98; letter-spacing: -0.03em; margin: 14px 0 0; white-space: nowrap; }
+  h1 em { font-style: normal; color: var(--rose); }
   .bills { align-self: center; display: grid; gap: 22px; }
   .row { display: grid; grid-template-columns: 250px 1fr; gap: 24px; align-items: center; }
-  .label { font: 500 19px "IBM Plex Mono", monospace; color: var(--ink-2); text-align: right; line-height: 1.25; }
+  .label { font: 500 19px "JetBrains Mono", monospace; color: var(--ink-2); text-align: right; line-height: 1.25; }
   .label small { display: block; font-size: 14px; color: var(--muted); }
   .bar { display: flex; gap: 3px; height: 64px; }
-  .bar span { display: flex; align-items: center; padding-left: 14px; font: 500 20px "IBM Plex Mono", monospace;
-              color: #0f1311; white-space: nowrap; overflow: hidden; }
+  .bar span { display: flex; align-items: center; padding-left: 14px; font: 500 20px "JetBrains Mono", monospace;
+              color: #07090D; white-space: nowrap; overflow: hidden; }
   .bar span:first-child { border-radius: 6px 0 0 6px; }
   .bar span:last-child { border-radius: 0 6px 6px 0; }
-  .s { background: var(--search); color: #fff !important; }
   .a { background: var(--agents); color: #fff !important; }
-  .p { background: var(--platform); }
-  .x { background: var(--sandbox); }
-  .gap { position: relative; margin-left: 274px; height: 0; }
-  .legend { display: flex; gap: 26px; font: 17px "IBM Plex Sans", sans-serif; color: var(--ink-2); }
+  .s { background: var(--search); }
+  .p { background: var(--platform); color: #fff !important; }
+  .x { background: repeating-linear-gradient(135deg, var(--sandbox) 0 9px, #B8503F 9px 15px); }
+  .legend { display: flex; gap: 26px; font: 17px Inter, sans-serif; color: var(--ink-2); }
   .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
   footer { display: flex; justify-content: space-between; align-items: end; border-top: 1px solid var(--rule); padding-top: 22px; }
   .claim { font-size: 24px; color: var(--ink); max-width: 820px; line-height: 1.3; }
-  .claim b { color: var(--accent); font-weight: 500; }
-  .repo { font: 17px "IBM Plex Mono", monospace; color: var(--muted); }
+  .claim b { color: var(--signal); font-weight: 500; }
+  .repo { font: 17px "JetBrains Mono", monospace; color: var(--muted); }
 </style>
 </head>
 <body>
 <div class="frame">
   <div>
     <div class="kicker">$ unalloc report --dimension team</div>
-    <h1>Who pays for the KV cache?</h1>
+    <h1>Who pays for the <em>KV cache?</em></h1>
   </div>
 
   <div class="bills">
-    <!-- torch_kv full run: shares of one pod's bill (search, agents, platform, sandbox) -->
+    <!-- torch_kv full run: shares of one pod's bill -->
     <div class="row">
       <div class="label">per-token bill<small>what the gateway sees</small></div>
       <div class="bar">
-        <span class="s" style="flex: 45.4">search 45%</span>
         <span class="a" style="flex: 15.4">agents 15%</span>
+        <span class="s" style="flex: 45.4">search 45%</span>
         <span class="p" style="flex: 19.2">19%</span>
         <span class="x" style="flex: 19.9">20%</span>
       </div>
@@ -63,8 +65,8 @@
     <div class="row">
       <div class="label">measured compute<small>what the GPU did</small></div>
       <div class="bar">
-        <span class="s" style="flex: 12.4">12%</span>
         <span class="a" style="flex: 38.9">agents 39%</span>
+        <span class="s" style="flex: 12.4">12%</span>
         <span class="p" style="flex: 23.8">24%</span>
         <span class="x" style="flex: 24.9">25%</span>
       </div>
@@ -72,10 +74,10 @@
     <div class="row">
       <div></div>
       <div class="legend">
-        <span><i style="background:var(--search)"></i>search · RAG</span>
         <span><i style="background:var(--agents)"></i>agents · long outputs</span>
+        <span><i style="background:var(--search)"></i>search · RAG</span>
         <span><i style="background:var(--platform)"></i>platform</span>
-        <span><i style="background:var(--sandbox)"></i>sandbox · no owner</span>
+        <span><i style="background:repeating-linear-gradient(135deg, var(--sandbox) 0 3px, #B8503F 3px 5px)"></i>sandbox · no owner</span>
       </div>
     </div>
   </div>

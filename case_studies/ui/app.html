@@ -1,36 +1,21 @@
 <title>unalloc Ledger Explorer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,600;87.5,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
+  /* timurista.ai "Ledger" system, a deliberate single dark look: ink ground, teal for
+     attributed spend, amber for money, rose only for spend with no owner. Source colors
+     are stacked violet, teal, blue, magenta, an order checked for color-vision separation. */
   :root {
-    color-scheme: light;
-    --ground: #f2f4f1; --surface: #fbfcfa; --ink: #17201b; --ink-2: #4f5b54; --muted: #7c8781;
-    --rule: #d6dcd6; --rule-strong: #b9c2bb; --accent: #1f5b45; --accent-wash: #e3ece6;
-    --good: #0f7a3a; --good-wash: #e2f0e5; --warn: #9a6200; --warn-wash: #f7ecd6;
-    --crit: #c23434; --crit-wash: #f6e1df;
-    --s-opencost: #2a78d6; --s-litellm: #eb6834; --s-openai: #1baf7a; --s-anthropic: #eda100;
-    --display: "Archivo", "Arial Narrow", system-ui, sans-serif;
-    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --ground: #121614; --surface: #1a1f1c; --ink: #eef2ee; --ink-2: #b9c3bc; --muted: #86918a;
-      --rule: #2b332e; --rule-strong: #3b453f; --accent: #7cc4a4; --accent-wash: #1f2c26;
-      --good: #5cc98a; --good-wash: #183024; --warn: #e0a84a; --warn-wash: #33291a;
-      --crit: #ef7a74; --crit-wash: #3a1f1e;
-      --s-opencost: #3987e5; --s-litellm: #d95926; --s-openai: #199e70; --s-anthropic: #c98500;
-    }
-  }
-  :root[data-theme="dark"] {
     color-scheme: dark;
-    --ground: #121614; --surface: #1a1f1c; --ink: #eef2ee; --ink-2: #b9c3bc; --muted: #86918a;
-    --rule: #2b332e; --rule-strong: #3b453f; --accent: #7cc4a4; --accent-wash: #1f2c26;
-    --good: #5cc98a; --good-wash: #183024; --warn: #e0a84a; --warn-wash: #33291a;
-    --crit: #ef7a74; --crit-wash: #3a1f1e;
-    --s-opencost: #3987e5; --s-litellm: #d95926; --s-openai: #199e70; --s-anthropic: #c98500;
+    --ground: #0B0F14; --surface: #0F141B; --ink: #E8EDF3; --ink-2: #9AA6B5; --muted: #7C8898;
+    --rule: #1F2833; --rule-strong: #2A3441; --accent: #35D0B0; --accent-wash: rgba(53, 208, 176, 0.10);
+    --good: #35D0B0; --good-wash: rgba(53, 208, 176, 0.12); --warn: #F2B544; --warn-wash: rgba(242, 181, 68, 0.12);
+    --crit: #EF7A6D; --crit-wash: rgba(239, 122, 109, 0.12);
+    --s-openai: #9A79E6; --s-opencost: #1FA88C; --s-litellm: #3F7FE0; --s-anthropic: #C75A9E;
+    --display: "Inter Tight", Inter, system-ui, sans-serif;
+    --body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
 
   * { box-sizing: border-box; }
@@ -85,6 +70,11 @@
   .track { display: flex; gap: 2px; height: 16px; min-width: 0; }
   .seg { height: 100%; min-width: 2px; }
   .seg:last-child { border-radius: 0 4px 4px 0; }
+  /* Spend with no owner keeps its source color but is always hatched, so a teal source
+     segment is never read as "attributed". */
+  .bars .key.unalloc + .track .seg { position: relative; }
+  .bars .key.unalloc + .track .seg::after { content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(135deg, rgba(7, 9, 13, 0.6) 0 3px, transparent 3px 6px); }
   .bars .amt { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
 
   .resolve-bar { display: flex; gap: 2px; height: 22px; border-radius: 4px; overflow: hidden; }
@@ -165,7 +155,8 @@
 <script>
 (() => {
   const DATA = JSON.parse(document.getElementById("unalloc-data").textContent);
-  const SOURCES = ["opencost", "litellm", "openai", "anthropic"];
+  // Stack order matters for color separation: violet and blue are never adjacent.
+  const SOURCES = ["openai", "opencost", "litellm", "anthropic"];
   const UNALLOCATED = "<unallocated>";
   const LEDGER_ROWS = 60;
   const $ = (id) => document.getElementById(id);

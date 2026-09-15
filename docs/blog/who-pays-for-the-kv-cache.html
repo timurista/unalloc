@@ -3,26 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0B0F14">
 <title>Who Pays for the KV Cache?</title>
 <meta name="description" content="I pushed real transformer inference, a vLLM-style serving simulator and torch.distributed through an open-source cost ledger. The metering rule moved a third of the bill.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87.5,600;87.5,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="../index.html">unalloc</a>
-  <nav aria-label="Site"><a href="../index.html">Overview</a><a href="../paper/unalloc-case-studies.pdf">Paper (PDF)</a><a href="../blog/who-pays-for-the-kv-cache.html" aria-current="page">Blog post</a><a href="../blog/gpu-validation.html">GPU addendum</a><a href="../explorer.html">Explorer</a><a href="https://github.com/timurista/unalloc">GitHub</a></nav>
+  <a class="brand" href="../index.html"><span class="mark" aria-hidden="true">u</span>unalloc</a>
+  <nav aria-label="Site"><a href="../index.html">Overview</a><a href="../paper/unalloc-case-studies.pdf">Paper</a><a href="../blog/who-pays-for-the-kv-cache.html" aria-current="page">Blog post</a><a href="../blog/gpu-validation.html">GPU addendum</a><a href="../explorer.html">Explorer</a><a href="https://github.com/timurista/unalloc">GitHub</a></nav>
 </div></header>
-<main><article class="post"><a class="crumb" href="../index.html">← unalloc overview</a><h1>Who Pays for the KV Cache?</h1>
+<main class="post-layout has-toc"><article class="post"><a class="crumb" href="../index.html">← unalloc</a><h1 id="who-pays-for-the-kv-cache">Who Pays for the KV Cache?</h1>
 <p><em>I pushed real transformer inference, a vLLM-style serving simulator and <code>torch.distributed</code> through an open-source cost ledger. The metering rule moved a third of the bill.</em></p>
 <p><img alt="Same GPU, same requests: per-token billing and measured compute disagree by 33 points on one team's share" src="../assets/blog/hero.png" /></p>
 <hr />
 <p>Ask an ML platform team what a single AI feature costs and you'll usually get two answers that don't add up.</p>
 <p>The Kubernetes side, often OpenCost, knows what your GPU pods cost. The API side, meaning your LiteLLM gateway plus the OpenAI and Anthropic billing consoles, knows what your tokens cost. A retrieval-augmented "answer" feature touches both: a vector database and an embedding job on the cluster, maybe a self-hosted model on a GPU pool, and a frontier model behind the gateway. Neither system can tell you what the feature costs, and neither can tell you the number finance actually wants: <strong>how much of this month's AI spend belongs to nobody?</strong></p>
 <p>I built a small tool for that question, <a href="https://github.com/timurista/unalloc">unalloc</a>. Then I tried to break it with inference workloads that behave like production, and wrote the results up as a <a href="https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf">paper</a>. This post is the readable version: what I measured, what surprised me, and what I'd tell a data science team that is about to set up showback for LLM costs.</p>
-<h2>The tool in sixty seconds</h2>
+<h2 id="the-tool-in-sixty-seconds">The tool in sixty seconds</h2>
 <p><code>unalloc</code> pulls OpenCost allocations, LiteLLM spend logs and the OpenAI and Anthropic organization cost APIs into one normalized ledger. Every row is a <code>CostRow</code>: a source, a name, a <code>Decimal</code> amount (never a float), and canonicalized labels. Then it groups that ledger on whichever label you say means "owner":</p>
 <pre><code class="language-bash">pip install unalloc
 unalloc report --fixtures --dimension team
@@ -34,7 +35,7 @@ unalloc report --fixtures --dimension team
 </code></pre>
 <p>The unglamorous hard part is labels. OpenCost gives you <code>label_costCenter</code>, LiteLLM gives you <code>team_id</code> or a <code>team:search</code> request tag, and OpenAI gives you a project ID. None of those join with a dictionary lookup, so every adapter canonicalizes keys before anything else happens.</p>
 <p>A tool that prints one percentage is only as good as the data behind it. So I built five case studies that generate that data the way real systems do.</p>
-<h2>Experiment 1: a real transformer with a real KV cache</h2>
+<h2 id="experiment-1-a-real-transformer-with-a-real-kv-cache">Experiment 1: a real transformer with a real KV cache</h2>
 <p>I wrote a small decoder-only transformer in PyTorch: 3.3M parameters, rotary embeddings, and an explicit, preallocated KV cache. Before timing anything, I checked that cached decoding produces exactly the same tokens as recomputing the whole prefix at every step. The largest logit difference was 1e-6.</p>
 <p><img alt="Decode step latency with and without a KV cache" src="../assets/figures/torch_e1.png" /></p>
 <p>The KV cache does what the textbooks say: at 1,024 tokens of context a decode step takes 0.85 ms instead of 30.9 ms, 36× faster. That isn't the interesting part.</p>
@@ -52,7 +53,7 @@ unalloc report --fixtures --dimension team
 <p>Per-token showback over-charged the RAG team by <strong>33 percentage points</strong> of the bill, $5,703 a month, relative to measured compute. Pricing output tokens at 4× input, like API list prices do, halves the gap. It doesn't close it.</p>
 </blockquote>
 <p>The size of that gap is specific to my hardware; I ran this on a CPU, where per-step overhead is large. The direction is structural: under token pricing, prompt-heavy workloads subsidize decode-heavy ones.</p>
-<h2>Experiment 2: a shared vLLM pod, simulated</h2>
+<h2 id="experiment-2-a-shared-vllm-pod-simulated">Experiment 2: a shared vLLM pod, simulated</h2>
 <p>A CPU transformer doesn't batch like a production server, so I also wrote a discrete-event simulator of a vLLM-style engine. It has paged KV blocks, automatic prefix caching, chunked prefill inside a shared token budget, continuous batching and recompute preemption. The agents tenant runs multi-turn sessions that re-send the whole conversation each turn, which is exactly the workload prefix caching was invented for.</p>
 <p>At a sustainable 3 requests per second the engine served 10,020 requests in half an hour, with a 75% prefix-cache hit rate and a median time-to-first-token under 100 ms. (My first choice, 4 req/s, looked healthy for five simulated minutes. Over thirty, agent follow-ups piled up and time-to-first-token passed 40 seconds. Run your load tests long enough.)</p>
 <p><img alt="One pod bill under five metering rules" src="../assets/figures/kv_shares.png" /></p>
@@ -63,7 +64,7 @@ unalloc report --fixtures --dimension team
 </ol>
 <p><img alt="Overhead visible to each meter as load rises" src="../assets/figures/kv_sweep.png" /></p>
 <p>This matters for anyone reporting an "unallocated" number. Emit the memory split with the overhead as an unlabeled row, and <code>unalloc</code> reports <strong>84.5%</strong> unallocated. Redistribute the same overhead as shared cost, and it reports <strong>9.1%</strong>. Same data, same labels; the percentage reflects your overhead policy as much as your tagging discipline.</p>
-<h2>Experiment 3: distributed inference leaks attribution through pod templates</h2>
+<h2 id="experiment-3-distributed-inference-leaks-attribution-through-pod-templates">Experiment 3: distributed inference leaks attribution through pod templates</h2>
 <p>Next I implemented tensor parallelism (Megatron-style column- and row-parallel layers with all-reduce) and two-stage pipeline parallelism on <code>torch.distributed</code>, and verified every configuration against the single-process model. Tokens were identical and the logit differences were about 3e-6.</p>
 <p>On CPU over loopback, 4-way tensor parallelism spends 82% of each rank's time in collectives. That's an upper bound for NVLink GPUs, so I only used the measurements to size a cost scenario. The scenario itself is the one that bites in real clusters.</p>
 <p>Multi-host inference on Kubernetes often runs as a <strong>LeaderWorkerSet</strong>: one leader pod template, one worker template. Teams add <code>team: search</code> to the leader and forget the worker.</p>
@@ -74,7 +75,7 @@ unalloc report --fixtures --dimension team
 <li><strong>Label the worker template:</strong> 96% lands on the right team.</li>
 </ul>
 <p>The headline percentage can't tell the second case from the third. So <code>unalloc</code> now reports how much spend was attributed <em>only</em> through a fallback key ($23,597 here). Fixing the collision also turned up a real bug. The tool had resolved label collisions by JSON key order, so the same pod landed in <code>vllm</code> or <code>search-llama-70b</code> depending on how the provider serialized its labels.</p>
-<h2>Experiment 4: join the ledgers, end to end</h2>
+<h2 id="experiment-4-join-the-ledgers-end-to-end">Experiment 4: join the ledgers, end to end</h2>
 <p>Finally I ran the actual CLI as a subprocess against mock OpenCost, LiteLLM, OpenAI and Anthropic servers. Each mock enforced its real authentication scheme and paged its responses. In the dev container, the LiteLLM spend log lives in Postgres, like it does in production.</p>
 <p><img alt="Ledger totals and pagination" src="../assets/figures/hybrid.png" /></p>
 <ul>
@@ -82,7 +83,7 @@ unalloc report --fixtures --dimension team
 <li><strong>Turn only the gateway on and you under-count.</strong> The gateway ledger reconciled to 72% of the provider invoices, because a research team called the APIs directly from notebooks.</li>
 <li><strong>Read one page of a billing API and you see a quarter of your spend.</strong> That's not hypothetical: it's what the original adapters did, until this experiment caught it. The same experiment caught an Anthropic adapter sending the wrong auth header and a default-URL bug that broke every live fetch.</li>
 </ul>
-<h2>What else a joined ledger is good for</h2>
+<h2 id="what-else-a-joined-ledger-is-good-for">What else a joined ledger is good for</h2>
 <p><img alt="Labeling Pareto and self-host break-even" src="../assets/figures/use_cases.png" /></p>
 <ul>
 <li><strong>Labeling is a Pareto problem.</strong> Sort the unlabeled rows by dollars, and three label fixes take a 67%-unallocated org to under 2%.</li>
@@ -90,7 +91,7 @@ unalloc report --fixtures --dimension team
 <li><strong>Build versus buy is a utilization question.</strong> The simulated self-hosted GPU beats a mid-tier API above roughly 0.23 requests/s, and a small-tier API only above roughly 1.7 requests/s. (That compares cost, not quality.)</li>
 <li><strong>Budgets belong in CI.</strong> <code>unalloc report --budget 10</code> exits non-zero when more than 10% of spend is unowned.</li>
 </ul>
-<h2>What I'd tell a team setting up LLM showback</h2>
+<h2 id="what-id-tell-a-team-setting-up-llm-showback">What I'd tell a team setting up LLM showback</h2>
 <ol>
 <li><strong>Pick the meter on purpose, and write it down.</strong> Token counts are a pricing decision, not a measurement of what the hardware did.</li>
 <li><strong>Keep overhead as its own line.</strong> Idle GPUs, empty KV pools and communication time are real costs. Decide how to share them instead of letting a meter hide them.</li>
@@ -98,9 +99,9 @@ unalloc report --fixtures --dimension team
 <li><strong>Give each dollar exactly one path into your ledger</strong>, then reconcile against the invoice every month.</li>
 <li><strong>Test your cost tooling against live APIs</strong>, not just fixtures. Every fetch-path bug I found passed the unit tests.</li>
 </ol>
-<h2>Caveats</h2>
+<h2 id="caveats">Caveats</h2>
 <p>The PyTorch timings are from a CPU, so the magnitudes aren't GPU numbers, though the directions are structural. <strong>Update:</strong> I've since re-run the metering experiment with real vLLM on an NVIDIA H100, and the finding held: token metering over-charged the RAG tenant by 12–14 points. The <a href="gpu-validation.html">GPU addendum</a> has the specs, the numbers and the terminal captures. The serving simulator uses an analytic latency model. Workloads are synthetic, and prices are round and illustrative.</p>
-<h2>Try it</h2>
+<h2 id="try-it">Try it</h2>
 <p>Everything, from studies to figures to the paper, regenerates from the repo:</p>
 <pre><code class="language-bash">git clone https://github.com/timurista/unalloc &amp;&amp; cd unalloc
 make research        # CPU PyTorch, notebook, typst
@@ -109,12 +110,12 @@ make paper           # figures + PDF
 make ui              # the ledger explorer at http://127.0.0.1:8765
 </code></pre>
 <p>If you'd rather click than clone, the <a href="../explorer.html">ledger explorer</a> runs every dataset from this post in your browser: pick the label that means "owner", add fallbacks, and watch each row resolve. There's also a companion notebook (<code>case_studies/unalloc_case_studies.ipynb</code>) and a dev container with a small Postgres if you'd rather not touch your machine. If you run a gateway or OpenCost in production, a scrubbed payload from your provider is the most useful contribution you could make.</p>
-<p><em>Code: <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a> · Paper: <a href="https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf">unalloc-case-studies.pdf</a> · All figures are by the author.</em></p></article></main>
+<p><em>Code: <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a> · Paper: <a href="https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf">unalloc-case-studies.pdf</a> · All figures are by the author.</em></p></article><aside class="toc" aria-label="On this page"><p>On this page</p><ol><li><a href="#the-tool-in-sixty-seconds">The tool in sixty seconds</a></li><li><a href="#experiment-1-a-real-transformer-with-a-real-kv-cache">Experiment 1: a real transformer with a real KV cache</a></li><li><a href="#experiment-2-a-shared-vllm-pod-simulated">Experiment 2: a shared vLLM pod, simulated</a></li><li><a href="#experiment-3-distributed-inference-leaks-attribution-through-pod-templates">Experiment 3: distributed inference leaks attribution through pod templates</a></li><li><a href="#experiment-4-join-the-ledgers-end-to-end">Experiment 4: join the ledgers, end to end</a></li><li><a href="#what-else-a-joined-ledger-is-good-for">What else a joined ledger is good for</a></li><li><a href="#what-id-tell-a-team-setting-up-llm-showback">What I&#x27;d tell a team setting up LLM showback</a></li><li><a href="#caveats">Caveats</a></li><li><a href="#try-it">Try it</a></li></ol></aside></main>
 <footer class="site"><div class="wrap">
   <span>Apache-2.0</span>
   <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a>
   <a href="https://doi.org/10.5281/zenodo.22761013">doi:10.5281/zenodo.22761013</a>
-  <span>Generated from the repository by <code>make pages</code></span>
+  <span>Every number on this site is generated from the repository by <code>make pages</code></span>
 </div></footer>
 </body>
 </html>
