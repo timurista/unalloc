@@ -7,6 +7,14 @@ authors:
     given-names: Timothy
 version: 0.2.1
 date-released: "2026-09-14"
+doi: 10.5281/zenodo.22761013
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22761013
+    description: "This version (0.2.1), archived on Zenodo"
+  - type: doi
+    value: 10.5281/zenodo.22761012
+    description: "All versions; resolves to the latest release"
 license: Apache-2.0
 repository-code: "https://github.com/timurista/unalloc"
 url: "https://timurista.github.io/unalloc/"

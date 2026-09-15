@@ -45,7 +45,8 @@
   #if affiliation != none [ \ #text(size: 9.5pt)[#affiliation] ]
   #v(1pt)
   #text(size: 9pt, fill: muted)[
-    #link("https://github.com/timurista/unalloc")[github.com/timurista/unalloc] · September 2026
+    #link("https://github.com/timurista/unalloc")[github.com/timurista/unalloc] ·
+    #link("https://doi.org/10.5281/zenodo.22761013")[doi:10.5281/zenodo.22761013] · September 2026
   ]
 ]
 
@@ -510,7 +511,8 @@ and pagination semantics as documented, not every field of the live responses.
 
 = Reproducibility
 
-Everything in this paper regenerates from the repository:
+Everything in this paper regenerates from the repository, archived as release 0.2.1 at
+#link("https://doi.org/10.5281/zenodo.22761013")[doi:10.5281/zenodo.22761013]:
 
 ```
 make research          # CPU PyTorch, notebook tooling, typst

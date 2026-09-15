@@ -7,6 +7,7 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://github.com/timurista/unalloc/blob/main/pyproject.toml)
 [![Paper](https://img.shields.io/badge/paper-PDF-1f5b45.svg)](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf)
 [![Explorer](https://img.shields.io/badge/explorer-live-1f5b45.svg)](https://timurista.github.io/unalloc/)
+[![DOI](https://zenodo.org/badge/1368528624.svg)](https://doi.org/10.5281/zenodo.22761012)
 
 OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Neither tells you what a single AI feature costs, because the two live in different systems with different keys. `unalloc` pulls both into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team.
 
@@ -207,6 +208,24 @@ Adding a source is deliberately small: implement `parse()` on a `Source` subclas
 ```bash
 pip install -e ".[dev]"
 ruff check . && pytest
+```
+
+## Citing
+
+If you use unalloc or its case studies, please cite the archived release. GitHub's "Cite this repository" button produces the same entry from [`CITATION.cff`](https://github.com/timurista/unalloc/blob/main/CITATION.cff).
+
+- **This version (0.2.1):** [doi:10.5281/zenodo.22761013](https://doi.org/10.5281/zenodo.22761013), the code the paper describes
+- **All versions:** [doi:10.5281/zenodo.22761012](https://doi.org/10.5281/zenodo.22761012), which always resolves to the latest release
+
+```bibtex
+@software{urista_unalloc_2026,
+  author  = {Urista, Timothy},
+  title   = {unalloc: find the AI spend nobody owns},
+  version = {0.2.1},
+  year    = {2026},
+  doi     = {10.5281/zenodo.22761013},
+  url     = {https://github.com/timurista/unalloc}
+}
 ```
 
 ## License
