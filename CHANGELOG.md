@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.2.1 — 2026-09-14
+
+### Changed
+- Paper prepared for arXiv: abstract leads with the attribution failures at the seams between ledgers and the H100 result; metering results are framed as disagreement between rules rather than over-charging, since none is a ground truth; new Related Work section (JouleShare, LLMVisor, PrefixShield, Cost-Governed RAG and others); defect catalogue moved to Appendix A; use of AI tools disclosed.
+- `paper/build.py` fails on Typst that compiles but renders wrong (`~`, `;` after a citation, unescaped dollar amounts).
 
 ### Added
 - `case_studies/gpu_validation`: benchmark client, fake server, remote setup script, analysis and evidence renderer for validating the metering results with real vLLM on a GPU, plus a DigitalOcean runbook. First run: H100, vLLM 0.29.0, Qwen2.5-7B-Instruct, 6,241 requests, 0 errors.

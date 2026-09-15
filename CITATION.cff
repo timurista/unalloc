@@ -5,8 +5,8 @@ type: software
 authors:
   - family-names: Urista
     given-names: Timothy
-version: 0.2.0
-date-released: "2026-09-13"
+version: 0.2.1
+date-released: "2026-09-14"
 license: Apache-2.0
 repository-code: "https://github.com/timurista/unalloc"
 url: "https://timurista.github.io/unalloc/"

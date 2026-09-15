@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "unalloc"
-version = "0.2.0"
+version = "0.2.1"
 description = "Find the AI spend nobody owns. Joins OpenCost allocation data with LLM provider bills and reports what's unattributed."
 readme = "README.md"
 requires-python = ">=3.11"

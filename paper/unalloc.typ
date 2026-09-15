@@ -21,7 +21,12 @@
 
 // Numbered citations; the reference list at the end uses the same order.
 #let refs = (vllm: 1, orca: 2, sarathi: 3, sglang: 4, megatron: 5, gpipe: 6, pope: 7,
-  kaplan: 8, roformer: 9, distserve: 10, opencost: 11, litellm: 12, lws: 13, finops: 14)
+  kaplan: 8, roformer: 9, distserve: 10, opencost: 11, litellm: 12, lws: 13, finops: 14,
+  jouleshare: 15, vellaisamy: 16, llmvisor: 17, prefixshield: 18, shapley: 19, drf: 20,
+  googlecarbon: 21, abacus: 22, costrag: 23)
+
+// Set before submitting, e.g. "Independent Researcher" or an institution. `none` omits the line.
+#let affiliation = none
 #let c(..keys) = [\[#keys.pos().map(k => str(refs.at(k))).join(", ")\]]
 
 #let rule = table.hline(stroke: 0.6pt)
@@ -37,6 +42,7 @@
   #text(size: 12pt)[Attributing Shared AI Inference Spend Across Kubernetes \ and LLM Provider Bills]
   #v(10pt)
   Timothy Urista
+  #if affiliation != none [ \ #text(size: 9.5pt)[#affiliation] ]
   #v(1pt)
   #text(size: 9pt, fill: muted)[
     #link("https://github.com/timurista/unalloc")[github.com/timurista/unalloc] · September 2026
@@ -47,26 +53,25 @@
 #block(inset: (x: 28pt))[
   #text(weight: "bold", size: 9.5pt)[Abstract.]
   #text(size: 9.5pt)[
-  Organizations now pay for AI through two disconnected ledgers: Kubernetes allocations for
-  self-hosted inference, and per-token bills from API providers, usually through a gateway. We
-  present `unalloc`, an open-source tool that normalizes OpenCost, LiteLLM, OpenAI and Anthropic
-  cost data into one Decimal-exact ledger and reports the share of spend with no owner. We then
-  stress it with five case studies that run inference for real or simulate it faithfully: a
-  discrete-event vLLM-style engine with paged KV memory and prefix caching; a from-scratch
+  Organizations pay for AI through disconnected ledgers: Kubernetes allocations for self-hosted
+  inference, gateway logs, and per-token bills from API providers. We present `unalloc`, an
+  open-source tool that joins OpenCost, LiteLLM, OpenAI and Anthropic cost data into one
+  Decimal-exact ledger and reports the share of spend with no owner, and use it to study where
+  attribution breaks at the seams between these systems. Five case studies run inference for
+  real or simulate it: a vLLM-style serving simulator with paged KV memory and prefix caching; a
   PyTorch transformer serving a multi-tenant trace with a real KV cache; tensor- and
-  pipeline-parallel inference on `torch.distributed`; the unmodified CLI against live mock
-  provider APIs; and four downstream use cases. The studies show that the metering rule, not
-  the workload, decides who pays: per-token showback misprices a retrieval-heavy tenant by
-  *33 percentage points* of a pod's bill relative to measured compute. Distributed serving leaks
-  attribution through pod templates: owner labels set only on leader pods leave *66%* of a
-  LeaderWorkerSet's GPU bill unowned, and the natural fallback silently assigns *61%* to a Helm
-  chart name. Joining ledgers naively double counts every gateway dollar, and reading one page
-  of a billing API reports a quarter of spend. A validation run with vLLM on an NVIDIA H100
-  confirms the metering result on production serving software: token metering over-charges the
-  retrieval tenant by *12–14 points* relative to its share of serving time at every load, while
-  GPU utilization reads 97–99% whether the server handles 2 or 16 requests per second. The
-  studies also surfaced nine defects in the tool itself, all fixed. Code, data, figures and this
-  paper regenerate from one command.
+  pipeline-parallel inference on `torch.distributed`; the unmodified CLI against mock provider
+  APIs; and four downstream use cases. At the seams, owner labels set only on LeaderWorkerSet
+  leader pods leave *66%* of a distributed deployment's GPU bill unowned, and the natural
+  fallback key assigns *61%* of it to a Helm chart name while the headline unallocated share
+  falls to 4%; enabling every source double counts all gateway spend; and reading one page of a
+  billing API reports a quarter of spend. Inside a shared inference server the metering rule
+  decides who pays: on an NVIDIA H100 running vLLM, a token meter assigns a retrieval-heavy
+  tenant *12–14 percentage points* more of the bill than an equal time-share meter at every load
+  tested, while GPU utilization reads 97–99% from 2 to 16 requests per second and power draw
+  tracks load. Neither meter is a ground truth, and we position these results against recent
+  Shapley-based energy attribution. Code, raw data, captured evidence, figures and this paper
+  regenerate from the repository.
   ]
 ]
 
@@ -96,13 +101,16 @@ We ask four questions, each answered by a case study:
 + *Joining.* What goes wrong when gateway and provider ledgers are combined? (§7)
 + *Use.* What can an organization do with a joined ledger beyond a percentage? (§8)
 
-*Contributions.* (i) An open-source ledger-joining tool with exact money handling, deterministic
-label canonicalization, invoice reconciliation, fallback-aware reporting and a CI budget gate.
-(ii) Five reproducible case studies — two with real PyTorch inference — whose payloads flow
-through the tool's production adapters, plus a validation of the metering result with vLLM on a
-datacenter GPU, with its bring-up and teardown captured. (iii) Quantified failure modes of common showback
-practice. (iv) A catalogue of nine defects the studies exposed in the tool (@tab-bugs), each
-now covered by a regression test.
+*Contributions.* (i) An open-source tool that joins Kubernetes, gateway and provider cost
+ledgers, with exact money handling, deterministic label canonicalization, invoice
+reconciliation, fallback-aware reporting and a CI budget gate. (ii) Attribution failures at the
+seams between those ledgers, measured end to end: label propagation in multi-pod serving,
+fallback misattribution, double counting and truncated billing reads (§6, §7). (iii) A comparison
+of metering rules for shared inference servers in simulation, with real PyTorch inference on
+CPU, and with vLLM on an H100 (§4, §5, §9), positioned against work that measures Shapley ground
+truth for energy (§10). (iv) A reproducible artifact: raw data, the captured GPU bring-up and
+teardown, and one-command regeneration. Defects the studies exposed in the tool itself, each now
+covered by a regression test, are listed in Appendix A.
 
 = The joined ledger
 
@@ -240,10 +248,11 @@ sequential and expensive.
   caption: [The same measured trace split seven ways. Above the rule: meters derivable from request
   logs. Below: meters that require serving telemetry.]) <fig-torch-shares>
 
-#finding[*Headline.* Per-token showback overcharges the RAG tenant by *33.0 points* of the pool —
-\$5,703/month on \$17,280 — relative to measured compute. Measured cost per token differs 9.2×
-between search and agents; a flat token price charges them identically. Pricing output at 4× halves
-the gap (17.8 points) without closing it.]
+#finding[*Headline.* Token counting and measured compute disagree on the RAG tenant's share by
+*33.0 points* of the pool, \$5,703 of \$17,280 a month. Measured cost per token differs 9.2×
+between search and agents, which a flat token price charges identically; weighting output at 4×
+halves the disagreement (17.8 points) without closing it. Neither meter is a ground truth, and on
+a batching GPU server the disagreement is smaller (§9).]
 
 On a GPU the per-step fixed overhead is amortized across a batch, so the magnitude is
 hardware-specific; the direction — prompt-heavy tenants subsidize decode-heavy ones under token
@@ -408,11 +417,15 @@ are in the repository.
   bill under token and time-share meters on the GPU (solid), and under the simulator's token and
   step-time meters where the simulator is not saturated (dashed).]) <fig-gpu>
 
-*The metering result holds.* Token metering charges search 16.5–18.9% of the bill; its share of
-serving time is 4.6–5.2%, a gap of 11.7–13.7 points at every load (@tab-gpu, @fig-gpu). At
-2 requests/s the simulator predicted 18.3% against 8.9%, a 9.4-point gap. The CPU experiment of §5
-overstated the size, 33 points, because an unbatched decode step there carries large fixed
-overhead; on a batching GPU server the gap narrows but keeps its direction.
+*The meters still disagree.* The token meter assigns search 16.5–18.9% of the bill; the
+time-share meter assigns 4.6–5.2%, a disagreement of 11.7–13.7 points at every load (@tab-gpu,
+@fig-gpu). At 2 requests/s the simulator predicted 18.3% against 8.9%, a 9.4-point disagreement.
+The CPU experiment of §5 overstated the size, 33 points, because an unbatched decode step there
+carries large fixed overhead; on a batching GPU server the disagreement narrows but keeps its
+direction. Equal time share is itself a heuristic: it charges a request waiting on prefill the same
+as one decoding. A Shapley allocation measured by replaying tenant subsets, as JouleShare does for
+request energy #c("jouleshare"), would provide a ground truth; with four tenants it needs 15
+subset runs per load level.
 
 *Utilization is not a cost signal.* `nvidia-smi` reported 97% utilization at 2 requests/s and 99%
 at 4, 8 and 16, while throughput rose 7×. vLLM had at least one running request in 97–100% of
@@ -438,28 +451,42 @@ inference, agent systems whose tool calls fan out across providers, speculative 
 draft model's cost belongs to the target model's callers, and multi-cloud estates where Bedrock and
 Azure OpenAI bills join the same dimension.
 
-= Defects found by the case studies
+= Related work <sec-related>
 
-#figure(
-  table(
-    columns: (auto, 1fr, auto),
-    align: (left, left, left),
-    rule,
-    table.header([*Area*], [*Defect*], [*Found by*]),
-    thin,
-    [Fetch], [OpenAI/Anthropic default base URL overridden by an unset env var; every live fetch failed], [review; e2e],
-    [Fetch], [Anthropic Admin API called with Bearer auth instead of `x-api-key` + `anthropic-version`], [review; e2e],
-    [Fetch], [No cursor pagination on provider cost APIs; first page only (≈25% of spend)], [review; e2e],
-    [Money], [OpenCost component costs summed through `float` when `totalCost` was absent], [review],
-    [Labels], [Only one provider prefix stripped; `label_app_kubernetes_io_name` ≠ `app.kubernetes.io/name`], [distributed],
-    [Labels], [Canonical-key collisions resolved by arrival order, incl. explicit key vs. alias], [distributed, e2e],
-    [Labels], [OpenCost annotations silently overrode same-key labels], [distributed],
-    [Report], [`labels` backlog ignored `--fallback`, disagreeing with `report`], [review],
-    [Report], [`labels` printed "Nothing unallocated" when no source loaded], [review],
-    rule,
-  ),
-  caption: [Defects fixed in the course of the studies. Each has a regression test.],
-) <tab-bugs>
+*Attributing shared inference.* JouleShare #c("jouleshare") is the closest work to §4, §5 and
+§9. It measures exact request-level Shapley energy #c("shapley") on vLLM by replaying every
+subset of eight requests, finds that token-proportional attribution misallocates roughly a
+quarter of batch energy under both static and continuous batching, and fits a lightweight
+estimator to the measured Shapley shares. It is stronger than this paper on ground truth. We
+compare metering rules without one, at the level of tenants rather than requests, and include
+KV-memory, list-price and time-share rules alongside tokens. Vellaisamy et al. #c("vellaisamy")
+decompose inference energy on H100 and H200 GPUs into fixed and per-token components and show
+that lower energy per token can reflect amortization rather than lower total energy: the same
+mismatch between token pricing and resource consumption that our meters express in dollars.
+LLMVisor #c("llmvisor") decomposes co-batched latency into per-request contributions for
+fractional sharing of a serving engine, again outperforming token-count baselines. PrefixShield
+#c("prefixshield") makes tenant groups responsible for the prefix-cache blocks they materialize,
+a scheduling answer to the shared-KV question our memory meter only measures. Shapley values
+#c("shapley") and dominant resource fairness #c("drf") are the classical foundations for sharing
+joint costs and multi-resource capacity.
+
+*Cost and emissions allocation in clouds.* Schneider and Mattia #c("googlecarbon") allocate the
+energy and emissions of shared data-center machines, infrastructure and software to cloud users
+from machine-level measurements. ABACUS #c("abacus") is a FinOps service that sets budgets, blocks
+deployments that exceed them and predicts cost from infrastructure-as-code, the same gate
+`unalloc report --budget` applies to unallocated spend. Cost-Governed RAG #c("costrag") attributes
+per-tenant cost across embedding, retrieval and generation within one data platform, using a
+vector index whose memory is linear per tenant. Our feature economics (§8) join the same layers
+across systems that do not share a platform or a key: Kubernetes allocations #c("opencost"), a
+gateway #c("litellm") and provider billing. FinOps allocation practice #c("finops") supplies the
+organizational target all of these serve.
+
+*What this paper adds.* Serving systems #c("vllm", "orca", "sarathi", "sglang", "distserve")
+define the mechanisms whose cost is attributed here but do not address billing, and the work
+above measures attribution inside one system. To our knowledge, none joins Kubernetes
+allocations, gateway logs and provider billing into one ledger or measures the attribution
+failures at those seams: label propagation across multi-pod serving templates, fallback keys
+that resolve to non-owners, double counting and truncated billing reads.
 
 = Discussion and limitations
 
@@ -470,7 +497,9 @@ own labeled line and redistribute it by policy, rather than letting any meter ab
 spend as unverified. (4) Choose sources so each dollar has one path into the ledger, and reconcile
 against invoices every month.
 
-*Limitations.* The PyTorch timings of §5 and §6 are from CPU, where fixed per-step overhead and
+*Limitations.* No allocation in this paper is a ground truth: the meters compared are defensible
+rules, and what we measure is how far they disagree, not which share is correct. The PyTorch
+timings of §5 and §6 are from CPU, where fixed per-step overhead and
 loopback collectives inflate decode and communication costs. §9 re-measures the metering result
 with vLLM on an H100, where its direction holds and its size is smaller. That run covers one GPU,
 one model, one two-minute window per load level and synthetic traffic, and its multi-turn prompts
@@ -496,6 +525,12 @@ The GPU run itself follows `case_studies/gpu_validation/RUNBOOK.md` on any singl
 after a free dry run against a bundled fake server. A browser-based ledger explorer (`python -m case_studies.ui`) shows every dataset row by row with
 the owner each row resolves to, and a companion notebook walks through each study.
 
+#heading(numbering: none)[Use of AI tools]
+The case-study code, experiment orchestration, analysis scripts, figures and drafts of this text
+were produced with Claude Code (Anthropic, Claude Opus 5) working under the author's direction,
+including the GPU run in §9. Generative AI is not an author of this work; the author is
+responsible for all of its content.
+
 #v(0.6em)
 #heading(numbering: none)[References]
 #set text(size: 8.5pt)
@@ -515,4 +550,46 @@ the owner each row resolves to, and a companion notebook walks through each stud
   [\[12\]], [LiteLLM: proxy server and SDK for LLM APIs. #link("https://github.com/BerriAI/litellm")[github.com/BerriAI/litellm]],
   [\[13\]], [LeaderWorkerSet: an API for deploying a group of pods as a unit. Kubernetes SIGs. #link("https://github.com/kubernetes-sigs/lws")[github.com/kubernetes-sigs/lws]],
   [\[14\]], [FinOps Foundation. FinOps Framework: Allocation. #link("https://www.finops.org/framework/")[finops.org/framework]],
+  [\[15\]], [Q. Luo, K. Li, Z. Wang, D. Wang and Y. Chen. Request-Level Energy Attribution for Batched LLM Serving. arXiv:2608.00026, 2026.],
+  [\[16\]], [P. Vellaisamy, V. Lam, S. Blanton and J. P. Shen. Characterization of Request and Token Energy Costs for LLM Inference Workloads on GPU Platforms. arXiv:2608.28044, 2026.],
+  [\[17\]], [S. Jin et al. LLMVisor: A Real-Time Latency Attribution Model for Multi-Tenant LLM Serving. arXiv:2608.08382, 2026.],
+  [\[18\]], [Z. Wang and R. Buyya. Preserving Admission Responsibility in Multi-Tenant Large Language Model Prefix Caches. arXiv:2608.01657, 2026.],
+  [\[19\]], [L. S. Shapley. A Value for n-Person Games. In _Contributions to the Theory of Games II_, Annals of Mathematics Studies 28, Princeton University Press, 1953.],
+  [\[20\]], [A. Ghodsi et al. Dominant Resource Fairness: Fair Allocation of Multiple Resource Types. NSDI 2011.],
+  [\[21\]], [I. Schneider and T. Mattia. Carbon Accounting in the Cloud: A Methodology for Allocating Emissions Across Data Center Users. arXiv:2406.09645, 2024.],
+  [\[22\]], [S. Deochake. ABACUS: A FinOps Service for Cloud Cost Optimization. arXiv:2501.14753, 2025.],
+  [\[23\]], [N. Shukla. Cost-Governed RAG: Unified Per-Tenant Cost Attribution Across Retrieval and Generation in Multi-Tenant LLM Systems. arXiv:2607.12188, 2026.],
 )
+
+#pagebreak(weak: true)
+#set text(size: 10pt)
+#set par(justify: true, leading: 0.58em, spacing: 0.9em)
+#counter(heading).update(0)
+#set heading(numbering: "A.1", supplement: [Appendix])
+
+= Defects found by the case studies <app-defects>
+
+The case studies exposed these defects in `unalloc` itself. Each is fixed and covered by a
+regression test; they are listed here rather than as findings because they concern the tool,
+not the attribution questions the paper studies.
+
+#figure(
+  table(
+    columns: (auto, 1fr, auto),
+    align: (left, left, left),
+    rule,
+    table.header([*Area*], [*Defect*], [*Found by*]),
+    thin,
+    [Fetch], [OpenAI/Anthropic default base URL overridden by an unset env var; every live fetch failed], [review; e2e],
+    [Fetch], [Anthropic Admin API called with Bearer auth instead of `x-api-key` + `anthropic-version`], [review; e2e],
+    [Fetch], [No cursor pagination on provider cost APIs; first page only (≈25% of spend)], [review; e2e],
+    [Money], [OpenCost component costs summed through `float` when `totalCost` was absent], [review],
+    [Labels], [Only one provider prefix stripped; `label_app_kubernetes_io_name` ≠ `app.kubernetes.io/name`], [distributed],
+    [Labels], [Canonical-key collisions resolved by arrival order, incl. explicit key vs. alias], [distributed, e2e],
+    [Labels], [OpenCost annotations silently overrode same-key labels], [distributed],
+    [Report], [`labels` backlog ignored `--fallback`, disagreeing with `report`], [review],
+    [Report], [`labels` printed "Nothing unallocated" when no source loaded], [review],
+    rule,
+  ),
+  caption: [Defects fixed in the course of the studies. Each has a regression test.],
+) <tab-bugs>
