@@ -1,6 +1,6 @@
-.PHONY: help install dev research demo lint test check check-wheel build clean docker \
-	case-studies case-studies-quick figures paper notebook ui devcontainer devcontainer-check \
-	release-check pages
+.PHONY: help install dev research require-research demo lint test check check-wheel build clean \
+	docker case-studies case-studies-quick figures paper notebook ui devcontainer \
+	devcontainer-check release-check pages
 
 VERSION := $(shell python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
 
@@ -41,33 +41,56 @@ docker:              ## Build the container image
 release-check: build ## Validate sdist/wheel metadata as PyPI will render it
 	pip install -q twine && twine check --strict dist/*
 
-pages:               ## Rebuild the GitHub Pages site in docs/ (landing, blog, paper, explorer)
-	python -m docs_build
+pages: require-research ## Rebuild the GitHub Pages site in docs/ (landing, blog, paper, explorer)
+	$(PY) -m docs_build
 
 # --- case studies & paper ------------------------------------------------------
 
-research:            ## Editable install with the case-study stack (CPU torch, notebook, typst)
-	pip install --extra-index-url https://download.pytorch.org/whl/cpu -e ".[dev,research]"
+# The case studies, figures, paper and site need the research stack (torch,
+# matplotlib, typst, markdown). Use the current interpreter when it has them,
+# otherwise the project venv that `make research` builds. Override with
+# `make paper PY=path/to/python`.
+VENV := .venv-research
+PY ?= $(shell if python3 -c 'import matplotlib, typst, markdown' 2>/dev/null; then echo python3; \
+	elif [ -x $(VENV)/bin/python ]; then echo $(VENV)/bin/python; else echo MISSING; fi)
+
+research:            ## Build ./.venv-research with the case-study stack (CPU torch, notebook, typst)
+	@command -v uv >/dev/null && uv venv $(VENV) || python3 -m venv $(VENV)
+	@# unsafe-best-match: the CPU torch index carries a few unrelated packages at old
+	@# versions, and uv's default (first index wins) then fails to resolve them.
+	@command -v uv >/dev/null \
+		&& uv pip install --python $(VENV)/bin/python --index-strategy unsafe-best-match \
+			--extra-index-url https://download.pytorch.org/whl/cpu -e ".[dev,research]" \
+		|| $(VENV)/bin/pip install \
+			--extra-index-url https://download.pytorch.org/whl/cpu -e ".[dev,research]"
+	@echo "research stack ready in $(VENV)"
+
+require-research:
+	@if [ "$(PY)" = "MISSING" ]; then \
+		echo "This target needs the case-study stack (torch, matplotlib, typst, markdown)."; \
+		echo "Run 'make research' once to build ./$(VENV), or pass your own:"; \
+		echo "    make $(MAKECMDGOALS) PY=/path/to/python"; \
+		exit 1; fi
 
 STUDIES = kv_cache torch_kv distributed hybrid_e2e use_cases
 
-case-studies:        ## Run every case study at full size (several minutes)
-	@for s in $(STUDIES); do echo "== $$s"; python -m case_studies.$$s || exit 1; done
+case-studies: require-research ## Run every case study at full size (several minutes)
+	@for s in $(STUDIES); do echo "== $$s"; $(PY) -m case_studies.$$s || exit 1; done
 
-case-studies-quick:  ## Smoke-run every case study into a scratch directory
-	@for s in $(STUDIES); do echo "== $$s"; python -m case_studies.$$s --quick --out .cache/quick/$$s || exit 1; done
+case-studies-quick: require-research ## Smoke-run every case study into a scratch directory
+	@for s in $(STUDIES); do echo "== $$s"; $(PY) -m case_studies.$$s --quick --out .cache/quick/$$s || exit 1; done
 
-figures:             ## Render paper figures from case_studies/results
-	python -m paper.make_figures
+figures: require-research ## Render paper figures (print) and site figures (dark)
+	$(PY) -m paper.make_figures
 
 paper: figures       ## Build paper/unalloc-case-studies.pdf
-	python -m paper.build
+	$(PY) -m paper.build
 
-notebook:            ## Execute the companion notebook in place
-	python -m case_studies.notebook_exec
+notebook: require-research ## Execute the companion notebook in place
+	$(PY) -m case_studies.notebook_exec
 
-ui:                  ## Serve the attribution explorer on http://localhost:8765
-	python -m case_studies.ui
+ui: require-research ## Serve the attribution explorer on http://localhost:8765
+	$(PY) -m case_studies.ui
 
 devcontainer:        ## Start the isolated dev stack (workspace + Postgres)
 	docker compose -f .devcontainer/docker-compose.yml up -d --build

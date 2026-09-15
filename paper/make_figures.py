@@ -121,6 +121,7 @@ def use_theme(name: str) -> None:
             "hatch.color": "#07090D" if name == "ledger" else "#ffffff",
             "hatch.linewidth": 0.8,
             "svg.fonttype": "path",
+            "svg.hashsalt": "unalloc",
         }
     )
 
@@ -135,7 +136,10 @@ def load(study: str) -> dict[str, Any]:
 def save(fig: plt.Figure, name: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for fmt in FORMATS:
-        fig.savefig(OUT / f"{name}.{fmt}", dpi=220, bbox_inches="tight")
+        # No date in the metadata: with a fixed hashsalt (see use_theme) an unchanged
+        # figure then re-renders byte-identically, so `make paper` leaves a clean tree.
+        fig.savefig(OUT / f"{name}.{fmt}", dpi=220, bbox_inches="tight",
+                    metadata={"Date": None} if fmt == "svg" else None)
     plt.close(fig)
     print(f"  {name}")
 

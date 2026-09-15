@@ -25,8 +25,8 @@
   jouleshare: 15, vellaisamy: 16, llmvisor: 17, prefixshield: 18, shapley: 19, drf: 20,
   googlecarbon: 21, abacus: 22, costrag: 23)
 
-// Set before submitting, e.g. "Independent Researcher" or an institution. `none` omits the line.
-#let affiliation = none
+// Must match the affiliation on the submitting arXiv account. `none` omits the line.
+#let affiliation = "Independent Researcher"
 #let c(..keys) = [\[#keys.pos().map(k => str(refs.at(k))).join(", ")\]]
 
 #let rule = table.hline(stroke: 0.6pt)

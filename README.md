@@ -163,7 +163,8 @@ Six studies push real (or realistically simulated) inference workloads through u
 | [`gpu_validation`](https://github.com/timurista/unalloc/blob/main/case_studies/gpu_validation) | Real vLLM 0.29 serving Qwen2.5-7B on a DigitalOcean H100, driven with the simulator's tenants ([runbook](https://github.com/timurista/unalloc/blob/main/case_studies/gpu_validation/RUNBOOK.md), [evidence](https://github.com/timurista/unalloc/tree/main/case_studies/results/gpu_validation/evidence)) | Token metering over-charges search by 12–14 points vs time share; GPU "utilization" reads 97% at 2 req/s and 99% at 16 req/s |
 
 ```bash
-make research            # CPU torch, notebook tooling, typst
+make research            # build ./.venv-research: CPU torch, notebook tooling, typst
+                         # (the targets below find it on their own; or pass PY=...)
 make case-studies        # all five, full size (a few minutes)
 make paper               # figures + PDF
 make notebook            # execute case_studies/unalloc_case_studies.ipynb
