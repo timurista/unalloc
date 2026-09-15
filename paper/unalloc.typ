@@ -61,8 +61,12 @@
   attribution through pod templates: owner labels set only on leader pods leave *66%* of a
   LeaderWorkerSet's GPU bill unowned, and the natural fallback silently assigns *61%* to a Helm
   chart name. Joining ledgers naively double counts every gateway dollar, and reading one page
-  of a billing API reports a quarter of spend. The studies also surfaced nine defects in the
-  tool itself, all fixed. Code, data, figures and this paper regenerate from one command.
+  of a billing API reports a quarter of spend. A validation run with vLLM on an NVIDIA H100
+  confirms the metering result on production serving software: token metering over-charges the
+  retrieval tenant by *12–14 points* relative to its share of serving time at every load, while
+  GPU utilization reads 97–99% whether the server handles 2 or 16 requests per second. The
+  studies also surfaced nine defects in the tool itself, all fixed. Code, data, figures and this
+  paper regenerate from one command.
   ]
 ]
 
@@ -87,7 +91,7 @@ between tenants, and each leaves a trace — or fails to — in the ledgers a to
 We ask four questions, each answered by a case study:
 
 + *Metering.* When one inference pod serves several tenants, how much does the choice of meter
-  (tokens, list-price tokens, compute time, KV memory) change each tenant's bill? (§4, §5)
+  (tokens, list-price tokens, compute time, KV memory) change each tenant's bill? (§4, §5, §9)
 + *Distribution.* What happens to attribution when one model replica spans several pods? (§6)
 + *Joining.* What goes wrong when gateway and provider ledgers are combined? (§7)
 + *Use.* What can an organization do with a joined ledger beyond a percentage? (§8)
@@ -95,7 +99,8 @@ We ask four questions, each answered by a case study:
 *Contributions.* (i) An open-source ledger-joining tool with exact money handling, deterministic
 label canonicalization, invoice reconciliation, fallback-aware reporting and a CI budget gate.
 (ii) Five reproducible case studies — two with real PyTorch inference — whose payloads flow
-through the tool's production adapters. (iii) Quantified failure modes of common showback
+through the tool's production adapters, plus a validation of the metering result with vLLM on a
+datacenter GPU, with its bring-up and teardown captured. (iii) Quantified failure modes of common showback
 practice. (iv) A catalogue of nine defects the studies exposed in the tool (@tab-bugs), each
 now covered by a regression test.
 
@@ -154,9 +159,13 @@ monthly pool is 8 GPUs × 720 h = \$17,280.
       auth schemes and cursor pagination], [real CLI, synthetic spend], [2 s],
     [`use_cases`], [Labeling Pareto, feature unit economics, self-host break-even, CI gate],
       [mixed], [25 s],
+    thin,
+    [`gpu_validation`], [vLLM 0.29.0 serving Qwen2.5-7B-Instruct on one NVIDIA H100 80GB, driven with
+      the `kv_cache` tenants at 2–16 requests/s (§9)], [real serving, synthetic traffic], [9 min],
     rule,
   ),
-  caption: [Case studies. Runtimes on an Apple-silicon laptop (10 cores), Python 3.11, PyTorch 2.14 CPU.],
+  caption: [Case studies. Runtimes on an Apple-silicon laptop (10 cores), Python 3.11, PyTorch 2.14
+  CPU, except `gpu_validation`, which ran on a DigitalOcean GPU Droplet.],
 ) <tab-studies>
 
 = A shared vLLM pod: the meter decides who pays <sec-kv>
@@ -193,11 +202,12 @@ closer: it moves agents from 72.4% to 59.4%, twelve points away from measured st
   caption: [Left: overhead visible to each meter as load rises. Right: search's share under three
   meters, overhead redistributed.]) <fig-kv-sweep>
 
-@fig-kv-sweep explains why. Step-time overhead collapses to ~0 by 2 requests/s: a pod that is
-"busy" in wall-clock terms is nowhere near its token capacity (754 vs. ~1,340 output tokens/s).
+@fig-kv-sweep explains why. Step-time overhead collapses to ≈0 by 2 requests/s: a pod that is
+"busy" in wall-clock terms is nowhere near its token capacity (754 vs. ≈1,340 output tokens/s).
 KV memory tells the opposite story — 95% of block-seconds are unheld at the same load, because pools
 are provisioned for peaks. Neither is wrong; they measure different scarce resources, and the choice
-moves several points of the bill between tenants.
+moves several points of the bill between tenants. §9 checks both observations against a real vLLM
+server on an H100.
 
 #finding[*For `unalloc`.* A per-tenant split only closes the gap if overhead is labeled. Emitting
 the memory split with an unlabeled overhead row reports 84.5% unallocated; redistributing the same
@@ -223,7 +233,7 @@ medians are used. Measured shares moved by at most 4.3 points across repeats.
 cached steps stay flat, 36.5× faster at 1,024 tokens. The attribution consequences are in
 @fig-torch-shares. Search sent 18,024 prompt tokens and received 701; agents sent 2,345 and
 received 4,017. Token counting (and analytic FLOPs #c("kaplan"), which track tokens) charge search
-~45% of the pool. Measured compute charges it 12.4%: prefill is batched and cheap, decode is
+≈45% of the pool. Measured compute charges it 12.4%: prefill is batched and cheap, decode is
 sequential and expensive.
 
 #figure(image("figures/torch_shares.svg", width: 100%),
@@ -344,12 +354,83 @@ costs \$22.32 per thousand requests including its vector database, against \$13.
 bill is counted: 40% of the feature's cost is invisible to a gateway-only view.
 
 *Build-versus-buy depends on utilization, not list price.* One self-hosted GPU serving the
-simulated traffic is cheaper than a mid-tier API above ~0.23 requests/s and cheaper than a
-small-tier API above ~1.7 requests/s (@fig-use-cases, right), flattening at 0.08× and 0.45×
+simulated traffic is cheaper than a mid-tier API above ≈0.23 requests/s and cheaper than a
+small-tier API above ≈1.7 requests/s (@fig-use-cases, right), flattening at 0.08× and 0.45×
 respectively once saturated. The comparison bounds cost, not quality.
 
 *Budgets belong in CI.* `unalloc report --budget 50` exits 2 on the fixtures (73.5% unallocated);
 `--budget 80` exits 0, so a deployment that ships unlabeled workloads can fail review.
+
+= Validation on a datacenter GPU <sec-gpu>
+
+== Setup
+The CPU timings of §5 and the analytic latency of §4 leave one question open: does the metering
+result survive production serving software on production hardware? One DigitalOcean GPU Droplet
+(`gpu-h100x1-80gb`: NVIDIA H100 80GB HBM3, driver 580.173.02, CUDA 13.0, 20-vCPU Xeon Platinum
+8468, 235 GB RAM) ran vLLM 0.29.0 #c("vllm") serving Qwen2.5-7B-Instruct in bf16 with an
+8,192-token context and prefix caching; vLLM sized its KV cache at 995,296 tokens.
+
+A client on the same machine replayed the §4 tenants as token-id prompts, so lengths were exact
+and shared system prompts byte-identical, with output lengths forced and greedy decoding. It ran
+two minutes each at 2, 4, 8 and 16 requests/s, recording each request's time to first token,
+completion time and the server-reported cached-token count, and sampling vLLM's Prometheus
+metrics twice a second and `nvidia-smi` once a second. The time-share meter splits every 50 ms of
+wall time equally across in-flight requests. The droplet existed for 29 minutes (about \$2.15);
+the runbook and the captured terminal output of every step, from creation to a verified deletion,
+are in the repository.
+
+== Results
+#figure(
+  table(
+    columns: 10,
+    align: (left, right, right, right, center, right, right, right, right, right),
+    inset: (x: 4pt, y: 3.2pt),
+    rule,
+    table.header(
+      [*Load* \ req/s], [*Requests*], [*Output* \ tok/s], [*Cache* \ hits],
+      [*TTFT* \ p50 / p95 ms], [*TPOT* \ p50 ms], [*GPU* \ util], [*Power* \ W],
+      [*search* \ tokens], [*search* \ time],
+    ),
+    thin,
+    [2], [446], [773], [67%], [28 / 44], [6.3], [97%], [469], [16.5%], [4.8%],
+    [4], [862], [1,479], [79%], [26 / 43], [6.7], [99%], [499], [16.6%], [4.7%],
+    [8], [1,638], [2,761], [78%], [29 / 47], [7.4], [99%], [547], [17.2%], [4.6%],
+    [16], [3,295], [5,389], [66%], [51 / 99], [12.2], [99%], [660], [18.9%], [5.2%],
+    rule,
+  ),
+  caption: [vLLM on an H100. All 6,241 requests completed without error and none waited in the
+  queue. TTFT is time to first token; TPOT is time per output token. The last two columns are
+  search's share of the bill under token and time-share meters, overhead redistributed.],
+) <tab-gpu>
+
+#figure(image("figures/gpu_validation.svg", width: 100%),
+  caption: [Left, middle: latency percentiles by load on the H100. Right: search's share of the
+  bill under token and time-share meters on the GPU (solid), and under the simulator's token and
+  step-time meters where the simulator is not saturated (dashed).]) <fig-gpu>
+
+*The metering result holds.* Token metering charges search 16.5–18.9% of the bill; its share of
+serving time is 4.6–5.2%, a gap of 11.7–13.7 points at every load (@tab-gpu, @fig-gpu). At
+2 requests/s the simulator predicted 18.3% against 8.9%, a 9.4-point gap. The CPU experiment of §5
+overstated the size, 33 points, because an unbatched decode step there carries large fixed
+overhead; on a batching GPU server the gap narrows but keeps its direction.
+
+*Utilization is not a cost signal.* `nvidia-smi` reported 97% utilization at 2 requests/s and 99%
+at 4, 8 and 16, while throughput rose 7×. vLLM had at least one running request in 97–100% of
+samples at every load, and the KV cache was 0.7–8.1% occupied. This is the §4 overhead result
+observed directly: time- and utilization-based meters see no idle capacity, and memory-based
+meters see almost nothing else. Power draw tracked load, from 469 W to 660 W.
+
+*The simulator's latency was too pessimistic.* Below saturation its throughput matched (737 vs.
+773 output tokens/s at 2 requests/s), but its step-latency constants saturate it by 8 requests/s,
+with multi-second time to first token, while the H100 served 16 requests/s with a 99 ms p95. The
+served model also stores about 57 KB of KV per token against the simulator's 131 KB. The §4
+shares should be read as directional and its latencies as uncalibrated; fitting the simulator's
+constants to this run is future work.
+
+#finding[*Operational.* vLLM 0.29.0's default FlashInfer sampler failed to JIT-compile on the
+provider's GPU image and stopped the engine; the PyTorch sampler, equivalent for greedy decoding,
+worked. Deleting the droplet by tag cleared the tag before the droplet itself was gone, so
+teardown was verified by resource ID, not tag.]
 
 *Further use cases.* The same ledger supports multi-LoRA serving (attribution by adapter label on a
 shared base model), fine-tuning and batch embedding jobs whose GPU hours share clusters with online
@@ -368,7 +449,7 @@ Azure OpenAI bills join the same dimension.
     thin,
     [Fetch], [OpenAI/Anthropic default base URL overridden by an unset env var; every live fetch failed], [review; e2e],
     [Fetch], [Anthropic Admin API called with Bearer auth instead of `x-api-key` + `anthropic-version`], [review; e2e],
-    [Fetch], [No cursor pagination on provider cost APIs; first page only (~25% of spend)], [review; e2e],
+    [Fetch], [No cursor pagination on provider cost APIs; first page only (≈25% of spend)], [review; e2e],
     [Money], [OpenCost component costs summed through `float` when `totalCost` was absent], [review],
     [Labels], [Only one provider prefix stripped; `label_app_kubernetes_io_name` ≠ `app.kubernetes.io/name`], [distributed],
     [Labels], [Canonical-key collisions resolved by arrival order, incl. explicit key vs. alias], [distributed, e2e],
@@ -389,11 +470,14 @@ own labeled line and redistribute it by policy, rather than letting any meter ab
 spend as unverified. (4) Choose sources so each dollar has one path into the ledger, and reconcile
 against invoices every month.
 
-*Limitations.* PyTorch timings are from CPU, where fixed per-step overhead and loopback
-collectives inflate decode and communication costs; the directions we report are structural but
-the magnitudes are not GPU numbers. The serving simulator uses analytic step latency and synthetic
-workloads. Dollar figures use round, illustrative prices. The mock provider APIs reproduce
-authentication and pagination semantics as documented, not every field of the live responses.
+*Limitations.* The PyTorch timings of §5 and §6 are from CPU, where fixed per-step overhead and
+loopback collectives inflate decode and communication costs. §9 re-measures the metering result
+with vLLM on an H100, where its direction holds and its size is smaller. That run covers one GPU,
+one model, one two-minute window per load level and synthetic traffic, and its multi-turn prompts
+append synthetic assistant tokens, so cross-turn prefix reuse excludes previous answers. The
+serving simulator uses analytic step latency whose constants proved too pessimistic for that GPU.
+Dollar figures use round, illustrative prices. The mock provider APIs reproduce authentication
+and pagination semantics as documented, not every field of the live responses.
 
 = Reproducibility
 
@@ -405,9 +489,11 @@ make case-studies      # writes case_studies/results/*/metrics.json
 make paper             # figures + this PDF
 make notebook          # executes the companion notebook
 make devcontainer-check  # the same, inside the isolated dev container
+python -m case_studies.gpu_validation.analyze   # §9, from the committed raw GPU data
 ```
 
-A browser-based ledger explorer (`python -m case_studies.ui`) shows every dataset row by row with
+The GPU run itself follows `case_studies/gpu_validation/RUNBOOK.md` on any single-GPU machine,
+after a free dry run against a bundled fake server. A browser-based ledger explorer (`python -m case_studies.ui`) shows every dataset row by row with
 the owner each row resolves to, and a companion notebook walks through each study.
 
 #v(0.6em)

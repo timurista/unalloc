@@ -5,6 +5,7 @@
 ### Added
 - `case_studies/gpu_validation`: benchmark client, fake server, remote setup script, analysis and evidence renderer for validating the metering results with real vLLM on a GPU, plus a DigitalOcean runbook. First run: H100, vLLM 0.29.0, Qwen2.5-7B-Instruct, 6,241 requests, 0 errors.
 - Blog addendum with the verified GPU specs, results and bring-up/teardown evidence.
+- Paper §9, "Validation on a datacenter GPU", with the H100 results table and figure; abstract, methodology table and limitations updated to match.
 
 ## 0.2.0 — 2026-09-13
 
