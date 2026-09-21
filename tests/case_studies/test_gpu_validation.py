@@ -74,3 +74,77 @@ def test_meters_split_the_whole_bill_and_disagree_by_workload_shape():
     assert result["tokens"]["search"] > result["tokens"]["agents"]
     assert result["time_share"]["agents"] > result["time_share"]["search"]
     assert result["kv_memory"]["__overhead__"] == 0.5
+
+
+def _stream(rid, tenant, send, dur, prompt, completion):
+    """A request that occupies [send, send+dur) with known token counts."""
+    return _request(rid, tenant, send, send + dur * 0.1, send + dur, prompt, completion, 0)
+
+
+def test_window_stability_drops_warmup_and_reports_spread():
+    from case_studies.gpu_validation.analyze import window_stability
+
+    # 45 s of steady traffic: one search request and one agents request per second,
+    # search always prompt-heavy. Window 0 is deliberately search-only, the pattern
+    # the real runs show while the pipeline fills.
+    reqs = []
+    rid = 0
+    for second in range(45):
+        rid += 1
+        reqs.append(_stream(rid, "search", float(second), 0.5, prompt=1000, completion=10))
+        if second >= 10:
+            rid += 1
+            reqs.append(_stream(rid, "agents", second + 0.5, 0.4, prompt=100, completion=200))
+    run = {"requests": reqs, "metrics": []}
+
+    stability = window_stability(run, window_s=10.0)
+    assert stability["skipped_warmup_windows"] == 1
+    assert [w["window"] for w in stability["windows"]] == [1, 2, 3]
+    # The warm-up window would have been 100% search under both meters; excluding it,
+    # the remaining windows agree with each other.
+    assert stability["divergence_pts"]["max"] - stability["divergence_pts"]["min"] < 1.0
+    assert stability["search_tokens"]["median"] > stability["search_time_share"]["median"]
+
+
+def test_window_stability_needs_enough_windows():
+    from case_studies.gpu_validation.analyze import window_stability
+
+    short = {"requests": [_stream(1, "search", 0.0, 1.0, 100, 10)], "metrics": []}
+    assert window_stability(short, window_s=10.0) == {}
+
+
+def test_bootstrap_ci_brackets_the_mean_and_needs_a_sample():
+    from case_studies.gpu_validation.analyze import bootstrap_ci
+
+    assert bootstrap_ci([1.0, 2.0]) is None
+    lo, hi = bootstrap_ci([10.0, 11.0, 12.0, 13.0, 14.0])
+    assert lo < 12.0 < hi
+    assert lo >= 10.0 and hi <= 14.0
+
+
+def test_spread_reports_quartiles_for_small_samples():
+    from case_studies.gpu_validation.analyze import spread
+
+    s = spread([4.0, 1.0, 3.0, 2.0])
+    assert (s["n"], s["min"], s["max"], s["median"]) == (4, 1.0, 4.0, 2.5)
+    assert s["p25"] < s["median"] < s["p75"]
+
+
+def test_across_repeats_summarizes_independent_runs():
+    from case_studies.gpu_validation.analyze import across_repeats
+
+    entries = [
+        {
+            "seed": 7 + i,
+            "divergence_search_tokens_vs_time_pts": d,
+            "output_tokens_per_s": 700.0 + i,
+            "latency": {"all": {"ttft_s": {"p50": 0.03}}},
+            "meters": {"tokens": {"search": 0.17}},
+        }
+        for i, d in enumerate((11.0, 13.0, 12.0))
+    ]
+    summary = across_repeats(entries)
+    assert summary["repeats"] == 3
+    assert summary["seeds"] == [7, 8, 9]
+    assert summary["divergence_pts"]["median"] == 12.0
+    assert (summary["divergence_pts"]["min"], summary["divergence_pts"]["max"]) == (11.0, 13.0)

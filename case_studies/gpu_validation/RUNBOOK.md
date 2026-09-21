@@ -87,6 +87,34 @@ ssh root@<ip> 'bash /root/unalloc/case_studies/gpu_validation/remote.sh bench --
 The client runs **on the droplet**, next to the server, so latency figures measure serving,
 not the internet. It aborts before the sweep if the warm-up sees any error.
 
+### Repeated runs (recommended for any new campaign)
+
+The published dataset is one run per load level, which gives no run-to-run error bar — the
+single largest weakness a reviewer will name. `--repeats` fixes that:
+
+```bash
+ssh root@<ip> 'bash /root/unalloc/case_studies/gpu_validation/remote.sh bench \
+  --rates 2 4 8 16 --duration 120 --repeats 5'
+```
+
+Each repeat draws a fresh seed, so the arrival process and prompt mix differ between runs
+rather than replaying identical traffic. The load levels are the **inner** loop, so anything
+that drifts over the session — clock throttling, cache state, a noisy neighbour — spreads
+across all four loads instead of landing on one.
+
+Budget it before you start. Benchmark time is `rates x duration x repeats` plus about 20 s of
+warm-up and inter-run settling per run:
+
+| repeats | benchmark time | droplet time incl. bring-up | approx. cost at $4.41/h |
+| --- | --- | --- | --- |
+| 1 (published) | 8 min | ~29 min | $2.15 |
+| 3 | 24 min | ~45 min | $3.31 |
+| 5 | 40 min | ~61 min | $4.48 |
+
+`analyze.py` groups `rate_<r>_r<n>.json` files by rate automatically and reports, per load, the
+median and range across repeats alongside the within-run window statistics. No flag needed; the
+single-run layout (`rate_<r>.json`) still works unchanged.
+
 ## 6. Copy results back
 
 ```bash

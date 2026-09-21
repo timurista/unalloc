@@ -170,7 +170,8 @@ async def main_async(args: argparse.Namespace) -> None:
     async with httpx.AsyncClient(timeout=10) as client:
         version = (await client.get(f"{args.base}/version")).json()
     meta = {"model": args.model, "base": args.base, "vllm": version, "max_len": args.max_len,
-            "rates": args.rates, "duration_s": args.duration, "seed": args.seed}
+            "rates": args.rates, "duration_s": args.duration, "seed": args.seed,
+            "repeats": args.repeats}
     (args.out / "meta.json").write_text(json.dumps(meta, indent=2))
 
     print("warm-up ...", flush=True)
@@ -180,16 +181,26 @@ async def main_async(args: argparse.Namespace) -> None:
     if warm["errors"]:
         raise SystemExit("warm-up failed; not spending GPU time on a broken client")
 
-    for rate in args.rates:
-        started = time.perf_counter()
-        result = await run_rate(args.base, args.model, rate, args.duration, args.seed, args.max_len)
-        path = args.out / f"rate_{rate:g}.json"
-        path.write_text(json.dumps(result))
-        done = [r for r in result["requests"] if r["usage"]]
-        tokens = sum(r["usage"]["completion_tokens"] for r in done)
-        print(f"rate {rate:g}: {len(result['requests'])} requests, {result['errors']} errors, "
-              f"{tokens / result['wall_s']:.0f} output tok/s, "
-              f"{time.perf_counter() - started:.0f}s -> {path}", flush=True)
+    # Repeats are the outer loop so the load levels interleave in time. Running every
+    # repeat of one rate back to back would confound load with anything that drifts
+    # during the session — clock throttling, cache state, a noisy neighbour.
+    for rep in range(args.repeats):
+        for rate in args.rates:
+            started = time.perf_counter()
+            # A distinct seed per (rate, repeat) draws a fresh arrival process and
+            # prompt mix; the same seed would replay identical traffic and understate
+            # how much of the spread comes from the workload sample.
+            seed = args.seed + 1000 * rep
+            result = await run_rate(args.base, args.model, rate, args.duration, seed, args.max_len)
+            result["repeat"] = rep
+            name = f"rate_{rate:g}.json" if args.repeats == 1 else f"rate_{rate:g}_r{rep}.json"
+            path = args.out / name
+            path.write_text(json.dumps(result))
+            done = [r for r in result["requests"] if r["usage"]]
+            tokens = sum(r["usage"]["completion_tokens"] for r in done)
+            print(f"rate {rate:g} rep {rep}: {len(result['requests'])} requests, "
+                  f"{result['errors']} errors, {tokens / result['wall_s']:.0f} output tok/s, "
+                  f"{time.perf_counter() - started:.0f}s -> {path}", flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -198,6 +209,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model", required=True)
     parser.add_argument("--rates", type=float, nargs="+", default=[2.0, 4.0, 8.0])
     parser.add_argument("--duration", type=float, default=120.0)
+    parser.add_argument("--repeats", type=int, default=1,
+                        help="independent runs per load level, each with its own seed")
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--max-len", type=int, default=8192)
     parser.add_argument("--out", type=Path, required=True)

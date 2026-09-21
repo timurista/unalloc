@@ -11,10 +11,12 @@ import argparse
 import csv
 import gzip
 import json
+import random
 import re
 import statistics
 from collections import defaultdict
 from datetime import UTC, datetime
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -138,6 +140,142 @@ def meters(run: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _quantile(values: list[float], q: float) -> float:
+    """Linear-interpolated quantile; `statistics.quantiles` needs n > 1."""
+    if not values:
+        return float("nan")
+    ordered = sorted(values)
+    if len(ordered) == 1:
+        return ordered[0]
+    pos = q * (len(ordered) - 1)
+    lo = int(pos)
+    hi = min(lo + 1, len(ordered) - 1)
+    return ordered[lo] + (ordered[hi] - ordered[lo]) * (pos - lo)
+
+
+def spread(values: list[float]) -> dict[str, float | int]:
+    return {
+        "n": len(values),
+        "median": statistics.median(values) if values else float("nan"),
+        "mean": statistics.fmean(values) if values else float("nan"),
+        "p25": _quantile(values, 0.25),
+        "p75": _quantile(values, 0.75),
+        "min": min(values) if values else float("nan"),
+        "max": max(values) if values else float("nan"),
+    }
+
+
+def bootstrap_ci(values: list[float], reps: int = 2000, seed: int = 11) -> list[float] | None:
+    """Percentile bootstrap for the mean. Resamples windows, not requests: the
+    time-share meter depends on which requests overlap, so a request-level
+    resample would destroy the concurrency it measures."""
+    if len(values) < 3:
+        return None
+    rng = random.Random(seed)
+    n = len(values)
+    means = sorted(
+        statistics.fmean(values[rng.randrange(n)] for _ in range(n)) for _ in range(reps)
+    )
+    return [means[int(0.025 * reps)], means[int(0.975 * reps)]]
+
+
+def window_stability(
+    run: dict[str, Any], window_s: float = 10.0, skip_windows: int = 1
+) -> dict[str, Any]:
+    """Recompute both meters inside consecutive windows of one run.
+
+    One two-minute run per load level gives no error bar. This does not
+    manufacture one — it cannot see run-to-run or seed-to-seed variation — but it
+    does say how much the answer moves as the traffic sample changes within a run,
+    which is a lower bound on the uncertainty and the only one the existing data
+    supports. Repeat runs (`bench.py --repeats`) are what bound the rest.
+
+    The first window is dropped. While the pipeline fills, the requests that have
+    *completed* are disproportionately the short ones, which biases any share
+    computed by completion time; measured across all four loads that window sits
+    3–4× above the steady-state divergence and is an artifact of the windowing,
+    not of the meters.
+    """
+    reqs = [r for r in run["requests"] if r["usage"] and r["first"] is not None]
+    if not reqs:
+        return {}
+    end = max(r["done"] for r in reqs)
+    n_windows = int(end // window_s)
+    if n_windows - skip_windows < 2:
+        return {}
+
+    rows = []
+    for w in range(skip_windows, n_windows):
+        lo, hi = w * window_s, (w + 1) * window_s
+        tokens: dict[str, float] = defaultdict(float)
+        for r in reqs:
+            if lo <= r["done"] < hi:
+                u = r["usage"]
+                tokens[r["tenant"]] += u["prompt_tokens"] + u["completion_tokens"]
+
+        share_time: dict[str, float] = defaultdict(float)
+        busy = 0
+        for tick in range(int(window_s / TICK_S)):
+            t = lo + tick * TICK_S
+            active = [r for r in reqs if r["send"] <= t < r["done"]]
+            if not active:
+                continue
+            busy += 1
+            for r in active:
+                share_time[r["tenant"]] += 1.0 / len(active)
+
+        total_tokens = sum(tokens.values())
+        if not total_tokens or not busy:
+            continue
+        # Both shares are normalized within the window, i.e. overhead redistributed.
+        tok = tokens.get("search", 0.0) / total_tokens
+        tim = share_time.get("search", 0.0) / busy
+        rows.append({
+            "window": w,
+            "requests_completed": sum(1 for r in reqs if lo <= r["done"] < hi),
+            "search_tokens": tok,
+            "search_time_share": tim,
+            "divergence_pts": 100 * (tok - tim),
+        })
+
+    if len(rows) < 2:
+        return {}
+    divergence = [r["divergence_pts"] for r in rows]
+    return {
+        "window_s": window_s,
+        "skipped_warmup_windows": skip_windows,
+        "windows": rows,
+        "search_tokens": spread([r["search_tokens"] * 100 for r in rows]),
+        "search_time_share": spread([r["search_time_share"] * 100 for r in rows]),
+        "divergence_pts": spread(divergence),
+        "divergence_mean_ci95": bootstrap_ci(divergence),
+    }
+
+
+def across_repeats(entries: list[dict[str, Any]]) -> dict[str, Any]:
+    """Spread of the headline numbers over independent runs at one load level."""
+    def pull(path: tuple[str, ...]) -> list[float]:
+        out = []
+        for e in entries:
+            node: Any = e
+            for key in path:
+                node = node[key]
+            if node is not None:
+                out.append(float(node))
+        return out
+
+    divergence = pull(("divergence_search_tokens_vs_time_pts",))
+    return {
+        "repeats": len(entries),
+        "seeds": [e.get("seed") for e in entries],
+        "divergence_pts": spread(divergence),
+        "divergence_mean_ci95": bootstrap_ci(divergence),
+        "output_tokens_per_s": spread(pull(("output_tokens_per_s",))),
+        "ttft_p50_ms": spread([v * 1000 for v in pull(("latency", "all", "ttft_s", "p50"))]),
+        "search_tokens_pct": spread([100 * v for v in pull(("meters", "tokens", "search"))]),
+    }
+
+
 def read_raw(path: Path) -> str | None:
     """Raw files are committed gzipped; accept either form."""
     if path.exists():
@@ -215,41 +353,41 @@ def main(argv: list[str] | None = None) -> int:
 
     meta = json.loads((args.raw / "meta.json").read_text())
     facts = server_facts(args.raw / "vllm.log")
-    rates = sorted(
-        float(match.group(1))
-        for path in args.raw.glob("rate_*.json*")
-        if (match := re.fullmatch(r"rate_([\d.]+)\.json(?:\.gz)?", path.name))
-    )
+
+    # rate -> [(repeat index, path)]; `rate_8.json` and `rate_8_r3.json` both belong here.
+    by_rate: dict[float, list[tuple[int, Path]]] = defaultdict(list)
+    for path in args.raw.glob("rate_*.json*"):
+        match = re.fullmatch(r"rate_([\d.]+)(?:_r(\d+))?\.json(?:\.gz)?", path.name)
+        if match:
+            base = path if path.suffix == ".json" else path.with_suffix("")
+            by_rate[float(match.group(1))].append((int(match.group(2) or 0), base))
+
     runs = []
-    for rate in rates:
-        run = json.loads(read_raw(args.raw / f"rate_{rate:g}.json") or "{}")
-        ok = [r for r in run["requests"] if r["usage"]]
-        prompt = sum(r["usage"]["prompt_tokens"] for r in ok)
-        cached = sum(((r["usage"].get("prompt_tokens_details") or {}).get("cached_tokens")) or 0
-                     for r in ok)
-        samples = run["metrics"]
-        busy = [s for s in samples if s.get("vllm:num_requests_running", 0) > 0]
-        start = run.get("started_unix", 0.0)
-        entry = {
-            "rate_rps": run["rate_rps"],
-            "duration_s": run["duration_s"],
-            "wall_s": run["wall_s"],
-            "requests": len(run["requests"]),
-            "errors": run["errors"],
-            "output_tokens_per_s": sum(r["usage"]["completion_tokens"] for r in ok) / run["wall_s"],
-            "prompt_tokens_per_s": prompt / run["wall_s"],
-            "cache_hit_rate_usage": cached / prompt if prompt else None,
-            "busy_fraction_engine": len(busy) / len(samples) if samples else None,
-            "max_waiting": max((s.get("vllm:num_requests_waiting", 0) for s in samples), default=0),
-            "latency": latency(run["requests"]),
-            "meters": meters(run),
-            "gpu": gpu_stats(args.raw / "nvidia_smi.csv", start, start + run["wall_s"]),
-            "simulator": simulator_twin(run["rate_rps"], run["duration_s"]),
+    for rate in sorted(by_rate):
+        entries = [
+            analyze_run(json.loads(read_raw(path) or "{}"), args.raw, rep)
+            for rep, path in sorted(by_rate[rate])
+        ]
+        entry = dict(entries[0])
+        if len(entries) > 1:
+            entry["repeat_count"] = len(entries)
+            entry["representative_repeat"] = entries[0].get("repeat", 0)
+            entry["across_repeats"] = across_repeats(entries)
+            entry["repeats"] = entries
+        # `headline` is what the paper quotes: identical to the single run when there
+        # is one, the median across independent runs when there are several.
+        entry["headline"] = {
+            "divergence_pts": statistics.median(
+                e["divergence_search_tokens_vs_time_pts"] for e in entries
+            ),
+            "search_tokens_pct": statistics.median(
+                100 * kv_attr.redistribute(e["meters"]["tokens"])["search"] for e in entries
+            ),
+            "search_time_share_pct": statistics.median(
+                100 * kv_attr.redistribute(e["meters"]["time_share"])["search"] for e in entries
+            ),
+            "runs": len(entries),
         }
-        entry["divergence_search_tokens_vs_time_pts"] = 100 * (
-            kv_attr.redistribute(entry["meters"]["tokens"])["search"]
-            - kv_attr.redistribute(entry["meters"]["time_share"])["search"]
-        )
         runs.append(entry)
 
     result = {"study": "gpu_validation", "meta": meta, "server": facts, "runs": runs}
@@ -267,8 +405,65 @@ def main(argv: list[str] | None = None) -> int:
               f"TPOT p50 {tpot['p50'] * 1e3:.1f} ms, e2e p50 {lat['e2e_s']['p50']:.2f} s, "
               f"GPU util {e['gpu'].get('gpu_util_pct_mean') or 0:.0f}%, "
               f"search tokens-vs-time {e['divergence_search_tokens_vs_time_pts']:+.1f} pts")
+        within = e.get("within_run") or {}
+        if within:
+            d = within["divergence_pts"]
+            ci = within.get("divergence_mean_ci95")
+            band = f", mean 95% CI {ci[0]:+.1f}..{ci[1]:+.1f}" if ci else ""
+            print(f"{'':>13}within run: {d['n']} × {within['window_s']:g}s windows, "
+                  f"divergence median {d['median']:+.1f}, IQR {d['p25']:+.1f}..{d['p75']:+.1f}, "
+                  f"range {d['min']:+.1f}..{d['max']:+.1f} pts{band}")
+        if e.get("across_repeats"):
+            a = e["across_repeats"]["divergence_pts"]
+            print(f"{'':>13}across {e['repeat_count']} runs: divergence median {a['median']:+.1f}, "
+                  f"range {a['min']:+.1f}..{a['max']:+.1f} pts")
     print(f"wrote {args.out / 'metrics.json'}")
     return 0
+
+
+def analyze_run(run: dict[str, Any], raw: Path, repeat: int = 0) -> dict[str, Any]:
+    """One (rate, repeat) benchmark file turned into the published numbers."""
+    ok = [r for r in run["requests"] if r["usage"]]
+    prompt = sum(r["usage"]["prompt_tokens"] for r in ok)
+    cached = sum(((r["usage"].get("prompt_tokens_details") or {}).get("cached_tokens")) or 0
+                 for r in ok)
+    samples = run["metrics"]
+    busy = [s for s in samples if s.get("vllm:num_requests_running", 0) > 0]
+    start = run.get("started_unix", 0.0)
+    entry = {
+        "rate_rps": run["rate_rps"],
+        "repeat": run.get("repeat", repeat),
+        "seed": run.get("seed"),
+        "duration_s": run["duration_s"],
+        "wall_s": run["wall_s"],
+        "requests": len(run["requests"]),
+        "completed_per_s": len(run["requests"]) / run["wall_s"],
+        "errors": run["errors"],
+        "output_tokens_per_s": sum(r["usage"]["completion_tokens"] for r in ok) / run["wall_s"],
+        "prompt_tokens_per_s": prompt / run["wall_s"],
+        "cache_hit_rate_usage": cached / prompt if prompt else None,
+        "busy_fraction_engine": len(busy) / len(samples) if samples else None,
+        "max_waiting": max((s.get("vllm:num_requests_waiting", 0) for s in samples), default=0),
+        "metric_sample_interval_s": _sample_interval(samples),
+        "latency": latency(run["requests"]),
+        "meters": meters(run),
+        "within_run": window_stability(run),
+        "gpu": gpu_stats(raw / "nvidia_smi.csv", start, start + run["wall_s"]),
+        "simulator": simulator_twin(run["rate_rps"], run["duration_s"]),
+    }
+    entry["divergence_search_tokens_vs_time_pts"] = 100 * (
+        kv_attr.redistribute(entry["meters"]["tokens"])["search"]
+        - kv_attr.redistribute(entry["meters"]["time_share"])["search"]
+    )
+    return entry
+
+
+def _sample_interval(samples: list[dict[str, Any]]) -> float | None:
+    """Median gap between telemetry samples: the resolution any "never queued"
+    claim is actually entitled to."""
+    stamps = sorted(s["t"] for s in samples if "t" in s)
+    gaps = [b - a for a, b in pairwise(stamps)]
+    return statistics.median(gaps) if gaps else None
 
 
 if __name__ == "__main__":
