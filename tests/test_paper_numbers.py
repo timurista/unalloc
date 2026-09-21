@@ -110,3 +110,53 @@ def test_configured_rate_is_distinguished_from_completed_traffic(rows):
     assert "session-initial" in text
     done = [run["requests"] / run["wall_s"] for _, run in rows]
     assert f"{min(done):.1f} to {max(done):.1f} completed requests per second" in text
+
+
+# --- the arXiv submission kit must describe the PDF that is actually committed ---
+
+PDF = ROOT / "paper" / "unalloc-case-studies.pdf"
+KIT = ROOT / "paper" / "arxiv" / "SUBMISSION.md"
+ABSTRACT = ROOT / "paper" / "arxiv" / "abstract.txt"
+
+
+def _pdf_pages(path: Path) -> int:
+    """Page count from the PDF's page tree, without a PDF library."""
+    blob = path.read_bytes()
+    counts = re.findall(rb"/Type\s*/Pages[^>]*?/Count\s+(\d+)", blob)
+    assert counts, "no page tree found in the PDF"
+    return max(int(c) for c in counts)
+
+
+@pytest.mark.skipif(not PDF.exists() or not KIT.exists(), reason="paper artifacts not present")
+def test_submission_comments_match_the_built_pdf():
+    kit = KIT.read_text()
+    pages = _pdf_pages(PDF)
+    assert f"| Comments | {pages} pages," in kit, (
+        f"SUBMISSION.md Comments claims a different length; the PDF has {pages} pages"
+    )
+    source = SOURCE.read_text()
+    figures = source.count("#figure(image(")
+    tables = len(re.findall(r"^#figure\($", source, re.MULTILINE))
+    assert f"{pages} pages, {figures} figures, {tables} tables" in kit
+
+
+@pytest.mark.skipif(not KIT.exists(), reason="submission kit not present")
+def test_submission_kit_cites_the_concept_doi():
+    """A version DOI goes stale on the next release; the concept DOI does not."""
+    kit = KIT.read_text()
+    concept = "10.5281/zenodo.22761012"
+    assert f"Software: doi:{concept}" in kit
+    assert concept in SOURCE.read_text(), "the paper itself should cite the same DOI"
+
+
+@pytest.mark.skipif(not ABSTRACT.exists(), reason="abstract not present")
+def test_standalone_abstract_carries_the_same_qualifications_as_the_paper():
+    text = ABSTRACT.read_text().strip()
+    assert len(text) <= 1920, f"arXiv caps the abstract at 1920 characters; this is {len(text)}"
+    # The two scope corrections must survive in the copy that readers see first.
+    assert "constructed multi-pod deployment scenario" in text
+    assert "synthetic OpenCost allocations" in text
+    assert "session-initial" in text
+    assert "completed requests per second" in text
+    # The bare claim the review flagged must not come back.
+    assert "97-99% from 2 to 16 requests per second" not in text
