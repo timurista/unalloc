@@ -219,14 +219,14 @@ ruff check . && pytest
 
 If you use unalloc or its case studies, please cite the archived release. GitHub's "Cite this repository" button produces the same entry from [`CITATION.cff`](https://github.com/timurista/unalloc/blob/main/CITATION.cff).
 
-- **All versions:** [doi:10.5281/zenodo.22761012](https://doi.org/10.5281/zenodo.22761012), which always resolves to the latest release — currently 0.2.2, the code the paper describes
+- **All versions:** [doi:10.5281/zenodo.22761012](https://doi.org/10.5281/zenodo.22761012), which always resolves to the latest release — currently 0.2.3, the code the paper describes
 - **Version 0.2.1:** [doi:10.5281/zenodo.22761013](https://doi.org/10.5281/zenodo.22761013)
 
 ```bibtex
 @software{urista_unalloc_2026,
   author  = {Urista, Timothy},
   title   = {unalloc: find the AI spend nobody owns},
-  version = {0.2.2},
+  version = {0.2.3},
   year    = {2026},
   doi     = {10.5281/zenodo.22761012},
   url     = {https://github.com/timurista/unalloc}

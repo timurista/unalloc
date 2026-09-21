@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.3 — 2026-09-21
+
+### Fixed
+- Figure 9's within-run spread is drawn as its own vertical bar rather than an error bar hung off the whole-run point. The old form had to clip whenever the whole-run share fell outside the window quartiles, which it does at three of the eight plotted points — the whole-run share is weighted by each window's traffic, so it need not lie inside the quartiles of its own windows.
+- §9 no longer presents the window statistics as a bootstrap confidence interval or as a bound on uncertainty. Consecutive windows of one run are not independent observations, so the paragraph now reports median, interquartile range and sign as descriptive statistics of that run, and the cross-reference matches what the figure actually draws. `bootstrap_ci` is renamed `resample_range`, and the metrics key `divergence_mean_ci95` becomes `divergence_mean_resample_range`.
+- arXiv kit refreshed against the built PDF: 14 pages, AI-use disclosure on page 13, and the concept DOI in the Comments field. The standalone abstract gained the synthetic-scenario qualification and the session-initial arrival-rate clarification that the paper's abstract already carried.
+
+### Added
+- `tests/test_paper_numbers.py` also checks the submission kit: the page, figure and table counts against the committed PDF, the concept DOI in both the kit and the paper, and the standalone abstract's length and scope wording.
+
 ## 0.2.2 — 2026-09-21
 
 ### Fixed

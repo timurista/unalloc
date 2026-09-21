@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: Urista
     given-names: Timothy
-version: 0.2.2
+version: 0.2.3
 date-released: "2026-09-21"
 doi: 10.5281/zenodo.22761012
 identifiers:
