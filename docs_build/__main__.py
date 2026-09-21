@@ -40,7 +40,7 @@ RESULTS = ROOT / "case_studies" / "results"
 FIGURES = ROOT / "paper" / "figures" / "ledger"
 
 REPO = "https://github.com/timurista/unalloc"
-DOI = "10.5281/zenodo.22761013"
+DOI = "10.5281/zenodo.22761012"
 FONTS = (
     "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600"
     "&family=Inter+Tight:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap"
@@ -362,7 +362,7 @@ def landing() -> str:
     body = f"""<main>
 <div class="wrap hero">
   <div>
-    <span class="eyebrow">Open-source AI cost attribution · v0.2.1</span>
+    <span class="eyebrow">Open-source AI cost attribution · v0.2.2</span>
     <h1>Find the AI spend <em>nobody owns.</em></h1>
     <p class="lede"><code>unalloc</code> joins OpenCost Kubernetes allocations with LiteLLM, OpenAI and Anthropic bills into one exact ledger and reports how much of your AI spend has no owner. Six case studies, one of them on a real H100, show where that attribution breaks.</p>
     <div class="actions">
@@ -410,11 +410,11 @@ def landing() -> str:
 
 <section class="band" id="cite"><div class="wrap cite">
   <header><span class="eyebrow">Cite</span><h2>Citing unalloc</h2></header>
-  <p>Release 0.2.1 is archived on Zenodo at <a href="https://doi.org/{DOI}">doi:{DOI}</a>, the code the paper describes.</p>
+  <p>Every release is archived on Zenodo at <a href="https://doi.org/{DOI}">doi:{DOI}</a>, which resolves to the latest &mdash; currently 0.2.2, the code the paper describes.</p>
   <pre><code>@software{{urista_unalloc_2026,
   author  = {{Urista, Timothy}},
   title   = {{unalloc: find the AI spend nobody owns}},
-  version = {{0.2.1}},
+  version = {{0.2.2}},
   year    = {{2026}},
   doi     = {{{DOI}}},
   url     = {{{REPO}}}
