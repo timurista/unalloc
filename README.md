@@ -11,7 +11,7 @@
 
 **Project site: [timurista.github.io/unalloc](https://timurista.github.io/unalloc/)**, with the findings, case studies, [paper (PDF)](https://timurista.github.io/unalloc/paper/unalloc-case-studies.pdf), [blog post](https://timurista.github.io/unalloc/blog/who-pays-for-the-kv-cache.html), [GPU addendum](https://timurista.github.io/unalloc/blog/gpu-validation.html) and [ledger explorer](https://timurista.github.io/unalloc/explorer.html).
 
-OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Neither tells you what a single AI feature costs, because the two live in different systems with different keys. `unalloc` pulls both into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team.
+OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Getting both into one view is possible today — OpenCost has an OpenAI plugin — but the answer still depends on a join nobody checks: the same dollar can arrive through both your gateway and your provider bill, and the labels that say who owns it are set per workload, not per pod template. `unalloc` pulls all four sources into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team — and how much of the rest was only rescued by a fallback key.
 
 ## The output
 
@@ -188,7 +188,9 @@ make devcontainer-check    # lint, tests and every case study at smoke size, ins
 
 OpenCost 1.121.0 added inference cost tracking for vLLM and llm-d deployments: cost per million tokens, KV-cache-corrected pricing, shared infrastructure attribution. That is excellent and `unalloc` does not reimplement it. Those rows arrive through the same `/allocation` shape and land in this ledger tagged `unalloc_layer=inference`.
 
-What OpenCost structurally cannot do is see your OpenAI and Anthropic bills, because they aren't Kubernetes objects. What LiteLLM cannot do is see your GPU nodes. `unalloc` lives in exactly that seam and nowhere else. It is:
+OpenCost can also bring external provider spend alongside Kubernetes cost through its plugin interface, including an OpenAI plugin announced in November 2024. So "Kubernetes cost and provider cost in one place" is not a gap `unalloc` invented, and it is not the claim here.
+
+What `unalloc` does is narrower: read all four sources yourself — OpenCost, a LiteLLM gateway, and the OpenAI and Anthropic billing APIs directly — and answer one question about the join. Which dollars carry no owner, which were rescued only by a fallback key that may be pointing at a Helm chart rather than a team, and which arrived twice because the gateway and the provider both reported them. That is the seam it lives in, and nowhere else. It is:
 
 - **not** a dashboard — it prints a number and exits (the explorer is a case-study companion, not part of the CLI)
 - **not** an optimizer — it makes no recommendations about rightsizing or commitments
@@ -217,16 +219,16 @@ ruff check . && pytest
 
 If you use unalloc or its case studies, please cite the archived release. GitHub's "Cite this repository" button produces the same entry from [`CITATION.cff`](https://github.com/timurista/unalloc/blob/main/CITATION.cff).
 
-- **This version (0.2.1):** [doi:10.5281/zenodo.22761013](https://doi.org/10.5281/zenodo.22761013), the code the paper describes
-- **All versions:** [doi:10.5281/zenodo.22761012](https://doi.org/10.5281/zenodo.22761012), which always resolves to the latest release
+- **All versions:** [doi:10.5281/zenodo.22761012](https://doi.org/10.5281/zenodo.22761012), which always resolves to the latest release — currently 0.2.2, the code the paper describes
+- **Version 0.2.1:** [doi:10.5281/zenodo.22761013](https://doi.org/10.5281/zenodo.22761013)
 
 ```bibtex
 @software{urista_unalloc_2026,
   author  = {Urista, Timothy},
   title   = {unalloc: find the AI spend nobody owns},
-  version = {0.2.1},
+  version = {0.2.2},
   year    = {2026},
-  doi     = {10.5281/zenodo.22761013},
+  doi     = {10.5281/zenodo.22761012},
   url     = {https://github.com/timurista/unalloc}
 }
 ```

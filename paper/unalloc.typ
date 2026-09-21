@@ -23,7 +23,7 @@
 #let refs = (vllm: 1, orca: 2, sarathi: 3, sglang: 4, megatron: 5, gpipe: 6, pope: 7,
   kaplan: 8, roformer: 9, distserve: 10, opencost: 11, litellm: 12, lws: 13, finops: 14,
   jouleshare: 15, vellaisamy: 16, llmvisor: 17, prefixshield: 18, shapley: 19, drf: 20,
-  googlecarbon: 21, abacus: 22, costrag: 23)
+  googlecarbon: 21, abacus: 22, costrag: 23, focus: 24, qwen: 25, vllmrelease: 26)
 
 // Must match the affiliation on the submitting arXiv account. `none` omits the line.
 #let affiliation = "Independent Researcher"
@@ -46,7 +46,7 @@
   #v(1pt)
   #text(size: 9pt, fill: muted)[
     #link("https://github.com/timurista/unalloc")[github.com/timurista/unalloc] ·
-    #link("https://doi.org/10.5281/zenodo.22761013")[doi:10.5281/zenodo.22761013] · September 2026
+    #link("https://doi.org/10.5281/zenodo.22761012")[doi:10.5281/zenodo.22761012] · September 2026
   ]
 ]
 
@@ -62,15 +62,16 @@
   real or simulate it: a vLLM-style serving simulator with paged KV memory and prefix caching; a
   PyTorch transformer serving a multi-tenant trace with a real KV cache; tensor- and
   pipeline-parallel inference on `torch.distributed`; the unmodified CLI against mock provider
-  APIs; and four downstream use cases. At the seams, owner labels set only on LeaderWorkerSet
-  leader pods leave *66%* of a distributed deployment's GPU bill unowned, and the natural
-  fallback key assigns *61%* of it to a Helm chart name while the headline unallocated share
-  falls to 4%; enabling every source double counts all gateway spend; and reading one page of a
-  billing API reports a quarter of spend. Inside a shared inference server the metering rule
+  APIs; and four downstream use cases. At the seams, in a constructed multi-pod deployment
+  scenario — one month of synthetic OpenCost allocations, not observed organizational billing
+  data — owner labels set only on LeaderWorkerSet leader pods leave *66%* of that deployment's
+  GPU bill unowned, and the natural fallback key assigns *61%* of it to a Helm chart name while
+  the headline unallocated share falls to 4%; enabling every source double counts all gateway
+  spend; and reading one page of a billing API reports a quarter of spend. Inside a shared inference server the metering rule
   decides who pays: on an NVIDIA H100 running vLLM, a token meter assigns a retrieval-heavy
   tenant *12–14 percentage points* more of the bill than an equal time-share meter at every load
-  tested, while GPU utilization reads 97–99% from 2 to 16 requests per second and power draw
-  tracks load. Neither meter is a ground truth, and we position these results against recent
+  tested, while GPU utilization reads 97–99% across configured loads of 2 to 16 requests per
+  second (3.7 to 26.9 completed requests per second) and power draw tracks load. Neither meter is a ground truth, and we position these results against recent
   Shapley-based energy attribution. Code, raw data, captured evidence, figures and this paper
   regenerate from the repository.
   ]
@@ -80,10 +81,16 @@
 
 The cost of an AI feature is split across systems that were never designed to agree. A
 retrieval-augmented answer might touch a vector database and an embedding job on Kubernetes, a
-self-hosted open-weights model on a GPU pool, and a frontier model behind an API gateway. OpenCost
-#c("opencost") can price the first two; the gateway and the provider's billing API can price the
-last. None of them can say what the feature costs, and none can say what share of the month's spend
-belongs to no one — the number FinOps allocation practice is built around #c("finops").
+self-hosted open-weights model on a GPU pool, and a frontier model behind an API gateway. Tooling
+for this already exists and is improving: OpenCost #c("opencost") prices Kubernetes workloads, its
+plugin interface brings external provider costs — including an OpenAI plugin — alongside them, and
+its inference accounting work addresses allocation versus usage cost, token costs and cache
+effects. FOCUS #c("focus") standardizes billing records across providers and represents split-cost
+allocation. What remains awkward in practice is the seam: the same dollar can arrive through more
+than one of these paths, ownership metadata is set per workload rather than per template, and a
+billing read that silently stops early looks identical to a cheap month. The question those seams
+raise is what share of the month's spend belongs to no one — the number FinOps allocation practice
+is built around #c("finops").
 
 `unalloc` exists to produce that number. Its design is deliberately small (§2): every source is
 parsed into one `CostRow` type, labels are canonicalized so `label_costCenter`, `team_id` and a
@@ -108,8 +115,8 @@ reconciliation, fallback-aware reporting and a CI budget gate. (ii) Attribution 
 seams between those ledgers, measured end to end: label propagation in multi-pod serving,
 fallback misattribution, double counting and truncated billing reads (§6, §7). (iii) A comparison
 of metering rules for shared inference servers in simulation, with real PyTorch inference on
-CPU, and with vLLM on an H100 (§4, §5, §9), positioned against work that measures Shapley ground
-truth for energy (§10). (iv) A reproducible artifact: raw data, the captured GPU bring-up and
+CPU, and with vLLM on an H100 (§4, §5, §9), positioned against work that measures a Shapley
+reference for request energy (§10). (iv) A reproducible artifact: raw data, the captured GPU bring-up and
 teardown, and one-command regeneration. Defects the studies exposed in the tool itself, each now
 covered by a regression test, are listed in Appendix A.
 
@@ -126,6 +133,12 @@ $ U(R, d) = (sum_(r in R, "owner"(r) = bot) "amount"(r)) / (sum_(r in R) "amount
 
 Because fallbacks make the headline smaller without making it more correct, `unalloc` also reports
 $F$, the spend attributed *only* through a fallback key (§6 shows why this matters).
+
+`CostRow` is deliberately not a billing interchange format. FOCUS #c("focus") is the standard for
+that, with a far larger column set and an explicit representation of split-cost allocation; a
+FOCUS-conformant ledger would be a reasonable source for the analysis here. What we implement is
+the smaller application-specific shape that ownership analysis needs, and we claim no conformance:
+establishing it would require a field-level mapping we have not carried out.
 
 == Canonicalization
 Label keys are lower-cased, camelCase is split, path-style keys keep their last segment
@@ -170,7 +183,8 @@ monthly pool is 8 GPUs × 720 h = \$17,280.
       [mixed], [25 s],
     thin,
     [`gpu_validation`], [vLLM 0.29.0 serving Qwen2.5-7B-Instruct on one NVIDIA H100 80GB, driven with
-      the `kv_cache` tenants at 2–16 requests/s (§9)], [real serving, synthetic traffic], [9 min],
+      the `kv_cache` tenants at configured loads of 2–16 requests/s (§9)],
+      [real serving, synthetic traffic], [9 min],
     rule,
   ),
   caption: [Case studies. Runtimes on an Apple-silicon laptop (10 cores), Python 3.11, PyTorch 2.14
@@ -238,8 +252,11 @@ medians are used. Measured shares moved by at most 4.3 points across repeats.
   and a step takes 0.85 ms instead of 30.9 ms.]) <fig-torch-e1>
 
 == Results
-@fig-torch-e1 reproduces the expected scaling #c("pope"): recomputation grows with context,
-cached steps stay flat, 36.5× faster at 1,024 tokens. The attribution consequences are in
+@fig-torch-e1 shows the expected shape #c("pope"): recomputation grows with context while a cached
+step avoids it, 36.5× faster at 1,024 tokens. Over the 32–1,024-token range measured here,
+cached-step latency changes far less than full recomputation; it should not be read as independent
+of context length in general, and Pope et al. explicitly discuss generation latency rising as the
+KV cache grows. The attribution consequences are in
 @fig-torch-shares. Search sent 18,024 prompt tokens and received 701; agents sent 2,345 and
 received 4,017. Token counting (and analytic FLOPs #c("kaplan"), which track tokens) charge search
 ≈45% of the pool. Measured compute charges it 12.4%: prefill is batched and cheap, decode is
@@ -256,9 +273,12 @@ halves the disagreement (17.8 points) without closing it. Neither meter is a gro
 a batching GPU server the disagreement is smaller (§9).]
 
 On a GPU the per-step fixed overhead is amortized across a batch, so the magnitude is
-hardware-specific; the direction — prompt-heavy tenants subsidize decode-heavy ones under token
-pricing — is structural, and matches the prefill/decode asymmetry that motivates disaggregated
-serving #c("distserve").
+hardware-specific. In these workloads token-based allocation assigns the prompt-heavy tenant a
+larger share than the timing-based meters. That phase asymmetry is consistent with the motivation
+for disaggregated serving #c("distserve"), which separates prefill from decode because their
+resource profiles differ; the size and direction of the allocation difference, however, depend on
+the workload, the batching behaviour and the reference meter chosen, and we do not claim a
+universal subsidy from prompt-heavy to decode-heavy tenants.
 
 = Distributed inference: attribution leaks through pod templates <sec-dist>
 
@@ -275,12 +295,18 @@ embeddings, norms and the LM head stay replicated. KV cache per rank halves with
   blocked in collectives or waiting for a peer.]) <fig-dist-timing>
 
 On CPU over loopback, distribution is slower, as expected (@fig-dist-timing): TP4 spends 82% of
-each rank's time in collectives. These fractions are an upper bound for NVLink-connected GPUs; we
-use them only to size the scenario below and report a sensitivity series at 5–20%.
+each rank's time in collectives. These are CPU-over-loopback measurements; we have not measured
+the equivalent fractions on NVLink-connected GPUs, and we make no claim that they bound them. We
+use them only to size the scenario below, and report a sensitivity series at 5–20% because the
+attribution result should not depend on the fraction we picked.
 
 == The LeaderWorkerSet month
 Multi-host serving on Kubernetes commonly runs one replica as a group of pods, e.g. with
-LeaderWorkerSet #c("lws"): a leader template and a worker template. We emit one month of OpenCost
+LeaderWorkerSet #c("lws"): a leader template and a worker template. The failure below is
+conditional, not inevitable — if the leader template is omitted entirely the worker template
+applies to the leader too, and labels on it reach every pod. It arises when both templates are
+specified and only one carries the owner label, which is the shape a chart that sets resources
+or affinities separately per role tends to produce. We emit one month of OpenCost
 allocations for two tenants — *search* (2 replicas × 4 pods, tensor parallel) and *agents*
 (3 replicas × 2 pods, pipeline parallel) — plus cluster idle, \$38,400 in total, with each pod's
 GPU time split into compute, communication and in-pod idle using the measured fractions.
@@ -378,11 +404,18 @@ The CPU timings of §5 and the analytic latency of §4 leave one question open: 
 result survive production serving software on production hardware? One DigitalOcean GPU Droplet
 (`gpu-h100x1-80gb`: NVIDIA H100 80GB HBM3, driver 580.173.02, CUDA 13.0, 20-vCPU Xeon Platinum
 8468, 235 GB RAM) ran vLLM 0.29.0 #c("vllm") serving Qwen2.5-7B-Instruct in bf16 with an
-8,192-token context and prefix caching; vLLM sized its KV cache at 995,296 tokens.
+8,192-token context and prefix caching; vLLM sized its KV cache at 995,296 tokens. The model is Qwen2.5-7B-Instruct as published on Hugging Face #c("qwen"). vLLM 0.29.0 is a
+release #c("vllmrelease") far newer than the PagedAttention paper #c("vllm") that introduced the
+engine, and the captured server log in the repository records the build actually served.
 
 A client on the same machine replayed the §4 tenants as token-id prompts, so lengths were exact
 and shared system prompts byte-identical, with output lengths forced and greedy decoding. It ran
-two minutes each at 2, 4, 8 and 16 requests/s, recording each request's time to first token,
+two minutes each at configured loads of 2, 4, 8 and 16 requests/s. The configured rate is the
+Poisson arrival rate of *session-initial* requests; the follow-up turns of multi-turn sessions
+arrive after their predecessor completes and are not counted in it, so total completed traffic
+was higher — 3.7, 7.1, 13.4 and 26.9 requests/s respectively (@tab-gpu). We report the configured
+rate as the load setting and completed throughput separately; every per-request and per-token
+result below is computed over all completed requests. The client recorded each request's time to first token,
 completion time and the server-reported cached-token count, and sampling vLLM's Prometheus
 metrics twice a second and `nvidia-smi` once a second. The time-share meter splits every 50 ms of
 wall time equally across in-flight requests. The droplet existed for 29 minutes (about \$2.15);
@@ -397,46 +430,72 @@ are in the repository.
     inset: (x: 4pt, y: 3.2pt),
     rule,
     table.header(
-      [*Load* \ req/s], [*Requests*], [*Output* \ tok/s], [*Cache* \ hits],
+      [*Load* \ req/s], [*Requests* \ (done/s)], [*Output* \ tok/s], [*Cache* \ hits],
       [*TTFT* \ p50 / p95 ms], [*TPOT* \ p50 ms], [*GPU* \ util], [*Power* \ W],
       [*search* \ tokens], [*search* \ time],
     ),
     thin,
-    [2], [446], [773], [67%], [28 / 44], [6.3], [97%], [469], [16.5%], [4.8%],
-    [4], [862], [1,479], [79%], [26 / 43], [6.7], [99%], [499], [16.6%], [4.7%],
-    [8], [1,638], [2,761], [78%], [29 / 47], [7.4], [99%], [547], [17.2%], [4.6%],
-    [16], [3,295], [5,389], [66%], [51 / 99], [12.2], [99%], [660], [18.9%], [5.2%],
+    [2], [446 (3.7)], [773], [67%], [28 / 44], [6.3], [97%], [469], [16.5%], [4.8%],
+    [4], [862 (7.1)], [1,479], [79%], [26 / 43], [6.7], [99%], [499], [16.6%], [4.7%],
+    [8], [1,638 (13.4)], [2,761], [78%], [29 / 47], [7.4], [99%], [547], [17.2%], [4.7%],
+    [16], [3,295 (26.9)], [5,389], [66%], [51 / 99], [12.2], [99%], [660], [18.9%], [5.3%],
     rule,
   ),
-  caption: [vLLM on an H100. All 6,241 requests completed without error and none waited in the
-  queue. TTFT is time to first token; TPOT is time per output token. The last two columns are
+  caption: [vLLM on an H100. *Load* is the configured arrival rate of session-initial requests;
+  with follow-up turns the completed rate in parentheses is roughly double it. All 6,241 requests
+  completed without error, and no queued request was observed in any half-second telemetry sample.
+  TTFT is time to first token; TPOT is time per output token. The last two columns are
   search's share of the bill under token and time-share meters, overhead redistributed.],
 ) <tab-gpu>
 
 #figure(image("figures/gpu_validation.svg", width: 100%),
   caption: [Left, middle: latency percentiles by load on the H100. Right: search's share of the
   bill under token and time-share meters on the GPU (solid), and under the simulator's token and
-  step-time meters where the simulator is not saturated (dashed).]) <fig-gpu>
+  step-time meters where the simulator is not saturated (dashed). Error bars are the interquartile
+  range of the same meter recomputed in ten-second windows of the run: within-run traffic
+  variation only, not run-to-run.]) <fig-gpu>
 
 *The meters still disagree.* The token meter assigns search 16.5–18.9% of the bill; the
-time-share meter assigns 4.6–5.2%, a disagreement of 11.7–13.7 points at every load (@tab-gpu,
-@fig-gpu). At 2 requests/s the simulator predicted 18.3% against 8.9%, a 9.4-point disagreement.
-The CPU experiment of §5 overstated the size, 33 points, because an unbatched decode step there
-carries large fixed overhead; on a batching GPU server the disagreement narrows but keeps its
-direction. Equal time share is itself a heuristic: it charges a request waiting on prefill the same
-as one decoding. A Shapley allocation measured by replaying tenant subsets, as JouleShare does for
-request energy #c("jouleshare"), would provide a ground truth; with four tenants it needs 15
-subset runs per load level.
+time-share meter assigns 4.7–5.3%, a disagreement of 11.7–13.7 points at every load (@tab-gpu,
+@fig-gpu). At the 2 requests/s load the simulator predicted 18.3% against 8.9%, a 9.4-point
+disagreement. The CPU experiment of §5 measured a larger gap, 33 points, on the same tenant mix.
+That is not a controlled comparison — the model, the serving software, the hardware and the
+execution of the workload all differ — so we report it as a difference between two experiments
+rather than an effect with a measured cause. Our hypothesis is that an unbatched decode step on
+CPU carries large fixed overhead that a batching GPU server amortizes, which would compress the
+gap without changing its direction; testing it would need the same model and workload run both
+ways. Equal time share is itself a heuristic: it charges a request waiting on prefill the same
+as one decoding. Replaying tenant subsets, as JouleShare does for request energy
+#c("jouleshare"), could provide a measured Shapley reference #c("shapley") for a specified cost
+function such as active GPU energy; with four tenants that is 15 non-empty coalitions per load
+level, before repetitions and baseline measurements. Translating such a reference into a division
+of a fixed rental bill would still require an overhead-allocation policy, so it bounds the
+metering question rather than closing it.
 
-*Utilization is not a cost signal.* `nvidia-smi` reported 97% utilization at 2 requests/s and 99%
-at 4, 8 and 16, while throughput rose 7×. vLLM had at least one running request in 97–100% of
+*How much of that gap is noise?* One two-minute run per load level carries no error bar, so we
+recomputed both meters inside consecutive ten-second windows of each run, normalizing within the
+window and discarding the first one: while the request pipeline fills, the requests that have
+*completed* are disproportionately the short ones, which biases any share computed by completion
+time, and that window sits 3–4× above the rest at every load. Over the eleven remaining windows
+the token-versus-time divergence has a median of 9.3, 11.7, 12.0 and 12.8 points at the four
+loads, an interquartile range of 2.5 to 7.5 points, and a bootstrap 95% interval for the mean of
+8.3–15.6, 8.9–13.8, 11.0–13.6 and 12.1–16.8 points (@fig-gpu, error bars). No interval approaches
+zero: within these runs, the direction and the rough size of the disagreement are stable, and the
+low-load estimate is the noisiest because a ten-second window there holds only about 35 completed
+requests. This bounds the variation contributed by the traffic sample *inside* a run and nothing
+more; run-to-run and seed-to-seed variation would need repeated runs, which the harness now
+supports (§11) but which this dataset does not contain.
+
+*Utilization is not a cost signal.* `nvidia-smi` reported 97% utilization at the 2 requests/s load
+and 99% at 4, 8 and 16, while throughput rose 7×. vLLM had at least one running request in 97–100% of
 samples at every load, and the KV cache was 0.7–8.1% occupied. This is the §4 overhead result
 observed directly: time- and utilization-based meters see no idle capacity, and memory-based
 meters see almost nothing else. Power draw tracked load, from 469 W to 660 W.
 
 *The simulator's latency was too pessimistic.* Below saturation its throughput matched (737 vs.
-773 output tokens/s at 2 requests/s), but its step-latency constants saturate it by 8 requests/s,
-with multi-second time to first token, while the H100 served 16 requests/s with a 99 ms p95. The
+773 output tokens/s at the 2 requests/s load), but its step-latency constants saturate it by the
+8 requests/s load, with multi-second time to first token, while the H100 served the 16 requests/s
+load — 26.9 completed requests/s — with a 99 ms p95. The
 served model also stores about 57 KB of KV per token against the simulator's 131 KB. The §4
 shares should be read as directional and its latencies as uncalibrated; fitting the simulator's
 constants to this run is future work.
@@ -458,8 +517,11 @@ Azure OpenAI bills join the same dimension.
 §9. It measures exact request-level Shapley energy #c("shapley") on vLLM by replaying every
 subset of eight requests, finds that token-proportional attribution misallocates roughly a
 quarter of batch energy under both static and continuous batching, and fits a lightweight
-estimator to the measured Shapley shares. It is stronger than this paper on ground truth. We
-compare metering rules without one, at the level of tenants rather than requests, and include
+estimator to the measured Shapley shares. Its reference is exact for the quantity it defines —
+active GPU energy, with idle power subtracted, divided by an explicitly chosen Shapley rule — and
+that is a stronger footing than this paper has. It is not, and does not claim to be, a uniquely
+correct division of a fixed rental bill, which must also place idle capacity. We compare metering
+rules without any such reference, at the level of tenants rather than requests, and include
 KV-memory, list-price and time-share rules alongside tokens. Vellaisamy et al. #c("vellaisamy")
 decompose inference energy on H100 and H200 GPUs into fixed and per-token components and show
 that lower energy per token can reflect amortization rather than lower total energy: the same
@@ -467,27 +529,42 @@ mismatch between token pricing and resource consumption that our meters express 
 LLMVisor #c("llmvisor") decomposes co-batched latency into per-request contributions for
 fractional sharing of a serving engine, again outperforming token-count baselines. PrefixShield
 #c("prefixshield") makes tenant groups responsible for the prefix-cache blocks they materialize,
-a scheduling answer to the shared-KV question our memory meter only measures. Shapley values
+a scheduling answer to the shared-KV question our memory meter only measures; its prototype
+isolates prefix lookup by accounting group, leaving cross-group reuse — and how to divide the cost
+of a prefix two tenants both benefit from — outside its scope. Shapley values
 #c("shapley") and dominant resource fairness #c("drf") are the classical foundations for sharing
 joint costs and multi-resource capacity.
 
 *Cost and emissions allocation in clouds.* Schneider and Mattia #c("googlecarbon") allocate the
-energy and emissions of shared data-center machines, infrastructure and software to cloud users
-from machine-level measurements. ABACUS #c("abacus") is a FinOps service that sets budgets, blocks
-deployments that exceed them and predicts cost from infrastructure-as-code, the same gate
-`unalloc report --budget` applies to unallocated spend. Cost-Governed RAG #c("costrag") attributes
-per-tenant cost across embedding, retrieval and generation within one data platform, using a
-vector index whose memory is linear per tenant. Our feature economics (§8) join the same layers
-across systems that do not share a platform or a key: Kubernetes allocations #c("opencost"), a
-gateway #c("litellm") and provider billing. FinOps allocation practice #c("finops") supplies the
+energy and emissions of shared data-center machines, infrastructure and software to cloud users,
+combining resource reservations with hourly usage rather than machine measurements alone. ABACUS
+#c("abacus") proposes a FinOps service for budget monitoring and enforcement and discusses
+integration with infrastructure-as-code cost checks; its paper presents policy-engine integration
+as an extension and predictive methods as future work. `unalloc report --budget` is a narrower
+gate on a different quantity: the fraction of observed spend that carries no ownership metadata,
+rather than an absolute spending limit. Cost-Governed RAG #c("costrag") attributes per-tenant cost
+across embedding, retrieval and generation, integrating a vector store and an LLM gateway inside a
+common governance boundary, with vector-index memory linear per tenant. Our feature economics (§8)
+join the same layers across sources that share neither a governance boundary nor a key: Kubernetes
+allocations #c("opencost"), a gateway #c("litellm") and provider billing. FinOps allocation practice #c("finops") supplies the
 organizational target all of these serve.
 
+*Cost tooling and standards.* OpenCost #c("opencost") supports Kubernetes allocation, external-cost
+plugins including one for OpenAI, and inference-specific accounting that discusses allocation
+versus usage cost, input and output token cost and cache effects. FOCUS #c("focus") standardizes
+billing data across providers and includes representations of split-cost allocation. Our internal
+`CostRow` is a smaller, application-specific representation built for ownership analysis; this work
+does not establish FOCUS conformance, which would require a field-level mapping we have not done.
+
 *What this paper adds.* Serving systems #c("vllm", "orca", "sarathi", "sglang", "distserve")
-define the mechanisms whose cost is attributed here but do not address billing, and the work
-above measures attribution inside one system. To our knowledge, none joins Kubernetes
-allocations, gateway logs and provider billing into one ledger or measures the attribution
-failures at those seams: label propagation across multi-pod serving templates, fallback keys
-that resolve to non-owners, double counting and truncated billing reads.
+define the mechanisms whose cost is attributed here but do not address billing, and the
+attribution work above measures cost inside one system. We build on the cost-tooling ecosystem
+rather than replacing it: a lightweight ledger spanning OpenCost, LiteLLM and direct provider
+billing, and a study of how source overlap, incomplete reads and ownership metadata change the
+answer. The contribution is the implementation and the reproducible characterization of these
+failure modes in this workflow — label propagation across multi-pod serving templates, fallback
+keys that resolve to non-owners, double counting and truncated billing reads — not the general
+idea of consolidating cost data, and not a claim that no other tool reads the same four sources.
 
 = Discussion and limitations
 
@@ -503,16 +580,23 @@ rules, and what we measure is how far they disagree, not which share is correct.
 timings of §5 and §6 are from CPU, where fixed per-step overhead and
 loopback collectives inflate decode and communication costs. §9 re-measures the metering result
 with vLLM on an H100, where its direction holds and its size is smaller. That run covers one GPU,
-one model, one two-minute window per load level and synthetic traffic, and its multi-turn prompts
+one model, one two-minute run per load level and synthetic traffic, and its multi-turn prompts
 append synthetic assistant tokens, so cross-turn prefix reuse excludes previous answers. The
+ten-second window analysis in §9 bounds only the variation from the traffic sample within each
+run. It cannot see run-to-run variance, warm-up effects that persist across a whole run, or
+anything specific to this droplet, this driver or this model; a campaign of repeated runs per load
+level — which `bench.py --repeats` now performs, interleaving the load levels so drift during the
+session does not land on one of them — is the experiment that would bound those, and we have not
+yet paid for it. Treat the 12–14 point result as one well-instrumented observation, not an
+estimate with a known standard error. The
 serving simulator uses analytic step latency whose constants proved too pessimistic for that GPU.
 Dollar figures use round, illustrative prices. The mock provider APIs reproduce authentication
 and pagination semantics as documented, not every field of the live responses.
 
 = Reproducibility
 
-Everything in this paper regenerates from the repository, archived as release 0.2.1 at
-#link("https://doi.org/10.5281/zenodo.22761013")[doi:10.5281/zenodo.22761013]:
+Everything in this paper regenerates from the repository, archived as release 0.2.2 at
+#link("https://doi.org/10.5281/zenodo.22761012")[doi:10.5281/zenodo.22761012]:
 
 ```
 make research          # CPU PyTorch, notebook tooling, typst
@@ -524,7 +608,10 @@ python -m case_studies.gpu_validation.analyze   # §9, from the committed raw GP
 ```
 
 The GPU run itself follows `case_studies/gpu_validation/RUNBOOK.md` on any single-GPU machine,
-after a free dry run against a bundled fake server. A browser-based ledger explorer (`python -m case_studies.ui`) shows every dataset row by row with
+after a free dry run against a bundled fake server. `bench.py --repeats n` runs each load level
+$n$ times with a fresh seed, interleaving the load levels, and the analysis reports the spread
+across those runs alongside the within-run window statistics; the dataset published here is
+$n = 1$, which is why §11 treats the result as an observation rather than an estimate. A browser-based ledger explorer (`python -m case_studies.ui`) shows every dataset row by row with
 the owner each row resolves to, and a companion notebook walks through each study.
 
 #heading(numbering: none)[Use of AI tools]
@@ -539,28 +626,31 @@ responsible for all of its content.
 #set par(justify: false, spacing: 0.55em)
 #grid(columns: (auto, 1fr), column-gutter: 6pt, row-gutter: 5pt,
   [\[1\]], [W. Kwon et al. Efficient Memory Management for Large Language Model Serving with PagedAttention. SOSP 2023. arXiv:2309.06180.],
-  [\[2\]], [G.-I. Yu et al. Orca: A Distributed Serving System for Transformer-Based Generative Models. OSDI 2022.],
-  [\[3\]], [A. Agrawal et al. Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve. OSDI 2024. arXiv:2403.02310.],
-  [\[4\]], [L. Zheng et al. SGLang: Efficient Execution of Structured Language Model Programs. NeurIPS 2024. arXiv:2312.07104.],
+  [\[2\]], [G.-I. Yu et al. Orca: A Distributed Serving System for Transformer-Based Generative Models. OSDI 2022. #link("https://www.usenix.org/conference/osdi22/presentation/yu")[usenix.org/conference/osdi22/presentation/yu]],
+  [\[3\]], [A. Agrawal et al. Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve. OSDI 2024. arXiv:2403.02310. #link("https://www.usenix.org/conference/osdi24/presentation/agrawal")[usenix.org/conference/osdi24/presentation/agrawal]],
+  [\[4\]], [L. Zheng et al. SGLang: Efficient Execution of Structured Language Model Programs. NeurIPS 2024. arXiv:2312.07104. #link("https://proceedings.neurips.cc/paper_files/paper/2024/hash/724be4472168f31ba1c9ac630f15dec8-Abstract-Conference.html")[proceedings.neurips.cc]],
   [\[5\]], [M. Shoeybi et al. Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism. arXiv:1909.08053, 2019.],
-  [\[6\]], [Y. Huang et al. GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism. NeurIPS 2019. arXiv:1811.06965.],
-  [\[7\]], [R. Pope et al. Efficiently Scaling Transformer Inference. MLSys 2023. arXiv:2211.05102.],
+  [\[6\]], [Y. Huang et al. GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism. NeurIPS 2019. arXiv:1811.06965. #link("https://proceedings.neurips.cc/paper/2019/hash/093f65e080a295f8076b1c5722a46aa2-Abstract.html")[proceedings.neurips.cc]],
+  [\[7\]], [R. Pope et al. Efficiently Scaling Transformer Inference. MLSys 2023. arXiv:2211.05102. #link("https://proceedings.mlsys.org/paper_files/paper/2023/hash/c4be71ab8d24cdfb45e3d06dbfca2780-Abstract-mlsys2023.html")[proceedings.mlsys.org]],
   [\[8\]], [J. Kaplan et al. Scaling Laws for Neural Language Models. arXiv:2001.08361, 2020.],
   [\[9\]], [J. Su et al. RoFormer: Enhanced Transformer with Rotary Position Embedding. arXiv:2104.09864, 2021.],
-  [\[10\]], [Y. Zhong et al. DistServe: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving. OSDI 2024. arXiv:2401.09670.],
-  [\[11\]], [OpenCost: open source cost monitoring for cloud native environments. CNCF. #link("https://www.opencost.io")[opencost.io]],
-  [\[12\]], [LiteLLM: proxy server and SDK for LLM APIs. #link("https://github.com/BerriAI/litellm")[github.com/BerriAI/litellm]],
-  [\[13\]], [LeaderWorkerSet: an API for deploying a group of pods as a unit. Kubernetes SIGs. #link("https://github.com/kubernetes-sigs/lws")[github.com/kubernetes-sigs/lws]],
-  [\[14\]], [FinOps Foundation. FinOps Framework: Allocation. #link("https://www.finops.org/framework/")[finops.org/framework]],
+  [\[10\]], [Y. Zhong et al. DistServe: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving. OSDI 2024. arXiv:2401.09670. #link("https://www.usenix.org/conference/osdi24/presentation/zhong-yinmin")[usenix.org/conference/osdi24/presentation/zhong-yinmin]],
+  [\[11\]], [OpenCost: open source cost monitoring for cloud native environments. CNCF. #link("https://www.opencost.io")[opencost.io]. OpenAI cost plugin, #link("https://opencost.io/docs/integrations/plugins/openai/")[docs/integrations/plugins/openai] (announced 21 November 2024); inference cost accounting, #link("https://opencost.io/blog/opencost-llmd-inference-cost/")[blog/opencost-llmd-inference-cost] (July 2026). Documentation retrieved 21 September 2026.],
+  [\[12\]], [LiteLLM: proxy server and SDK for LLM APIs. #link("https://github.com/BerriAI/litellm")[github.com/BerriAI/litellm]. Retrieved 21 September 2026.],
+  [\[13\]], [LeaderWorkerSet: an API for deploying a group of pods as a unit. Kubernetes SIGs. #link("https://github.com/kubernetes-sigs/lws")[github.com/kubernetes-sigs/lws]. Dual pod templates: #link("https://lws.sigs.k8s.io/docs/concepts/leaderworkerset/pod-templates/")[lws.sigs.k8s.io/docs/concepts]. Retrieved 21 September 2026.],
+  [\[14\]], [FinOps Foundation. FinOps Framework: Allocation capability. #link("https://www.finops.org/framework/capabilities/allocation/")[finops.org/framework/capabilities/allocation]],
   [\[15\]], [Q. Luo, K. Li, Z. Wang, D. Wang and Y. Chen. Request-Level Energy Attribution for Batched LLM Serving. arXiv:2608.00026, 2026.],
   [\[16\]], [P. Vellaisamy, V. Lam, S. Blanton and J. P. Shen. Characterization of Request and Token Energy Costs for LLM Inference Workloads on GPU Platforms. arXiv:2608.28044, 2026.],
   [\[17\]], [S. Jin et al. LLMVisor: A Real-Time Latency Attribution Model for Multi-Tenant LLM Serving. arXiv:2608.08382, 2026.],
   [\[18\]], [Z. Wang and R. Buyya. Preserving Admission Responsibility in Multi-Tenant Large Language Model Prefix Caches. arXiv:2608.01657, 2026.],
-  [\[19\]], [L. S. Shapley. A Value for n-Person Games. In _Contributions to the Theory of Games II_, Annals of Mathematics Studies 28, Princeton University Press, 1953.],
-  [\[20\]], [A. Ghodsi et al. Dominant Resource Fairness: Fair Allocation of Multiple Resource Types. NSDI 2011.],
+  [\[19\]], [L. S. Shapley. A Value for n-Person Games. In _Contributions to the Theory of Games II_, Annals of Mathematics Studies 28, Princeton University Press, 1953, pp. 307–317.],
+  [\[20\]], [A. Ghodsi et al. Dominant Resource Fairness: Fair Allocation of Multiple Resource Types. NSDI 2011. #link("https://www.usenix.org/legacy/event/nsdi11/tech/")[usenix.org/legacy/event/nsdi11/tech]],
   [\[21\]], [I. Schneider and T. Mattia. Carbon Accounting in the Cloud: A Methodology for Allocating Emissions Across Data Center Users. arXiv:2406.09645, 2024.],
-  [\[22\]], [S. Deochake. ABACUS: A FinOps Service for Cloud Cost Optimization. arXiv:2501.14753, 2025.],
-  [\[23\]], [N. Shukla. Cost-Governed RAG: Unified Per-Tenant Cost Attribution Across Retrieval and Generation in Multi-Tenant LLM Systems. arXiv:2607.12188, 2026.],
+  [\[22\]], [S. Deochake. ABACUS: A FinOps Service for Cloud Cost Optimization. Preprint, arXiv:2501.14753, submitted 22 December 2024.],
+  [\[23\]], [N. Shukla. Cost-Governed RAG: Unified Per-Tenant Cost Attribution Across Retrieval and Generation in Multi-Tenant LLM Systems. Preprint, arXiv:2607.12188, 2026.],
+  [\[24\]], [FinOps Foundation. FOCUS: FinOps Open Cost and Usage Specification, v1.4. #link("https://focus.finops.org/docs/specification/v1-4/sections/introduction/")[focus.finops.org]. Retrieved 21 September 2026.],
+  [\[25\]], [Qwen Team. Qwen2.5-7B-Instruct model card. #link("https://huggingface.co/Qwen/Qwen2.5-7B-Instruct")[huggingface.co/Qwen/Qwen2.5-7B-Instruct]. Weights as served on 14 September 2026.],
+  [\[26\]], [vLLM v0.29.0 release. #link("https://github.com/vllm-project/vllm/releases")[github.com/vllm-project/vllm/releases]. Version recorded in the captured server log.],
 )
 
 #pagebreak(weak: true)
