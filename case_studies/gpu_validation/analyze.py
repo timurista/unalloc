@@ -165,10 +165,19 @@ def spread(values: list[float]) -> dict[str, float | int]:
     }
 
 
-def bootstrap_ci(values: list[float], reps: int = 2000, seed: int = 11) -> list[float] | None:
-    """Percentile bootstrap for the mean. Resamples windows, not requests: the
-    time-share meter depends on which requests overlap, so a request-level
-    resample would destroy the concurrency it measures."""
+def resample_range(values: list[float], reps: int = 2000, seed: int = 11) -> list[float] | None:
+    """Middle 95% of the resampled mean — descriptive, *not* a confidence interval.
+
+    The windows it resamples are consecutive slices of one run, so they are neither
+    independent nor identically distributed: traffic autocorrelates across a ten-second
+    boundary, and one run is one draw from the population that matters. Reported to show
+    how much the mean moves when windows are reweighted, and for no inferential purpose.
+    Repeated runs (`bench.py --repeats`) are what would support an interval.
+
+    It resamples windows rather than requests because the time-share meter depends on
+    which requests overlap, so a request-level resample would destroy the concurrency
+    it measures.
+    """
     if len(values) < 3:
         return None
     rng = random.Random(seed)
@@ -184,11 +193,11 @@ def window_stability(
 ) -> dict[str, Any]:
     """Recompute both meters inside consecutive windows of one run.
 
-    One two-minute run per load level gives no error bar. This does not
-    manufacture one — it cannot see run-to-run or seed-to-seed variation — but it
-    does say how much the answer moves as the traffic sample changes within a run,
-    which is a lower bound on the uncertainty and the only one the existing data
-    supports. Repeat runs (`bench.py --repeats`) are what bound the rest.
+    One two-minute run per load level gives no error bar, and this does not
+    manufacture one. It is a description of how much the answer moves as the
+    traffic sample changes inside a single run — not an estimate of uncertainty,
+    which would need the run-to-run and seed-to-seed variation that repeated runs
+    (`bench.py --repeats`) measure and this does not see.
 
     The first window is dropped. While the pipeline fills, the requests that have
     *completed* are disproportionately the short ones, which biases any share
@@ -248,7 +257,7 @@ def window_stability(
         "search_tokens": spread([r["search_tokens"] * 100 for r in rows]),
         "search_time_share": spread([r["search_time_share"] * 100 for r in rows]),
         "divergence_pts": spread(divergence),
-        "divergence_mean_ci95": bootstrap_ci(divergence),
+        "divergence_mean_resample_range": resample_range(divergence),
     }
 
 
@@ -269,7 +278,7 @@ def across_repeats(entries: list[dict[str, Any]]) -> dict[str, Any]:
         "repeats": len(entries),
         "seeds": [e.get("seed") for e in entries],
         "divergence_pts": spread(divergence),
-        "divergence_mean_ci95": bootstrap_ci(divergence),
+        "divergence_mean_resample_range": resample_range(divergence),
         "output_tokens_per_s": spread(pull(("output_tokens_per_s",))),
         "ttft_p50_ms": spread([v * 1000 for v in pull(("latency", "all", "ttft_s", "p50"))]),
         "search_tokens_pct": spread([100 * v for v in pull(("meters", "tokens", "search"))]),
@@ -408,8 +417,8 @@ def main(argv: list[str] | None = None) -> int:
         within = e.get("within_run") or {}
         if within:
             d = within["divergence_pts"]
-            ci = within.get("divergence_mean_ci95")
-            band = f", mean 95% CI {ci[0]:+.1f}..{ci[1]:+.1f}" if ci else ""
+            rs = within.get("divergence_mean_resample_range")
+            band = f", resampled mean {rs[0]:+.1f}..{rs[1]:+.1f}" if rs else ""
             print(f"{'':>13}within run: {d['n']} × {within['window_s']:g}s windows, "
                   f"divergence median {d['median']:+.1f}, IQR {d['p25']:+.1f}..{d['p75']:+.1f}, "
                   f"range {d['min']:+.1f}..{d['max']:+.1f} pts{band}")

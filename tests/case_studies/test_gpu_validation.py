@@ -113,11 +113,11 @@ def test_window_stability_needs_enough_windows():
     assert window_stability(short, window_s=10.0) == {}
 
 
-def test_bootstrap_ci_brackets_the_mean_and_needs_a_sample():
-    from case_studies.gpu_validation.analyze import bootstrap_ci
+def test_resample_range_brackets_the_mean_and_needs_a_sample():
+    from case_studies.gpu_validation.analyze import resample_range
 
-    assert bootstrap_ci([1.0, 2.0]) is None
-    lo, hi = bootstrap_ci([10.0, 11.0, 12.0, 13.0, 14.0])
+    assert resample_range([1.0, 2.0]) is None
+    lo, hi = resample_range([10.0, 11.0, 12.0, 13.0, 14.0])
     assert lo < 12.0 < hi
     assert lo >= 10.0 and hi <= 14.0
 

@@ -451,24 +451,28 @@ def gpu_validation() -> None:
     def search(split: dict[str, float]) -> float:
         return split["search"] / (1 - split.get("__overhead__", 0.0))
 
-    # Error bars are the interquartile range of the same meter recomputed inside
-    # ten-second windows of the run: within-run traffic variation only, not
-    # run-to-run. Absent when a run is too short to window.
-    def iqr(run: dict, key: str) -> tuple[float, float]:
-        w = (run.get("within_run") or {}).get(key)
-        if not w:
-            return 0.0, 0.0
-        mid = search(run["meters"]["tokens" if key == "search_tokens" else "time_share"]) * 100
-        return max(0.0, mid - w["p25"]) / 100, max(0.0, w["p75"] - mid) / 100
-
+    # The whole-run share and the spread of the ten-second windows are two different
+    # quantities, so they are drawn as two different things. An error bar hung off
+    # the whole-run point would have to be clipped whenever that point sits outside
+    # the window quartiles — which happens, because the whole-run share is weighted
+    # by each window's traffic and a weighted aggregate need not lie inside the
+    # quartiles of its parts. The bar is offset in x so both stay visible.
     for key, meter, color, label in (
         ("search_tokens", "tokens", CAT[0], "tokens (H100)"),
         ("search_time_share", "time_share", CAT[1], "time share (H100)"),
     ):
-        lo, hi = zip(*[iqr(r, key) for r in runs], strict=False)
-        c.errorbar(rates, [search(r["meters"][meter]) for r in runs], yerr=[lo, hi],
-                   color=color, marker="o", markersize=3.5, label=label,
-                   elinewidth=0.8, capsize=2)
+        c.plot(rates, [search(r["meters"][meter]) for r in runs], color=color,
+               marker="o", markersize=3.5, label=label)
+        windows = [(r["rate_rps"] * 1.07, (r.get("within_run") or {}).get(key)) for r in runs]
+        spread = [(x, w["p25"] / 100, w["p75"] / 100) for x, w in windows if w]
+        if spread:
+            xs, p25, p75 = zip(*spread, strict=False)
+            c.vlines(xs, p25, p75, color=color, alpha=0.5, linewidth=2.2)
+    if any((r.get("within_run") or {}) for r in runs):
+        # INK_2, not NEUTRAL: the print theme's neutral is a near-white grey that
+        # disappears as a legend swatch.
+        c.vlines([], [], [], color=INK_2, alpha=0.6, linewidth=2.2,
+                 label="10 s window IQR")
     # Simulator points only where it is not saturated, so the comparison is fair.
     healthy = [r for r in runs if max(r["simulator"]["ttft_p50_s"].values()) < 1.0]
     c.plot([r["rate_rps"] for r in healthy],

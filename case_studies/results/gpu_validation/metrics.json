@@ -285,7 +285,7 @@
           "min": 5.340528433797926,
           "max": 25.319860748970264
         },
-        "divergence_mean_ci95": [
+        "divergence_mean_resample_range": [
           8.297100737613809,
           15.563581461854351
         ]
@@ -609,7 +609,7 @@
           "min": 4.186993228741816,
           "max": 16.42716274399319
         },
-        "divergence_mean_ci95": [
+        "divergence_mean_resample_range": [
           8.89766369929564,
           13.823858183221773
         ]
@@ -933,7 +933,7 @@
           "min": 8.075811828864921,
           "max": 16.145045367223595
         },
-        "divergence_mean_ci95": [
+        "divergence_mean_resample_range": [
           11.039541233633976,
           13.599445590696217
         ]
@@ -1257,7 +1257,7 @@
           "min": 8.795078418389737,
           "max": 25.01319022866091
         },
-        "divergence_mean_ci95": [
+        "divergence_mean_resample_range": [
           12.071479386327455,
           16.78347951813469
         ]

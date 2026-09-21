@@ -451,9 +451,11 @@ are in the repository.
 #figure(image("figures/gpu_validation.svg", width: 100%),
   caption: [Left, middle: latency percentiles by load on the H100. Right: search's share of the
   bill under token and time-share meters on the GPU (solid), and under the simulator's token and
-  step-time meters where the simulator is not saturated (dashed). Error bars are the interquartile
-  range of the same meter recomputed in ten-second windows of the run: within-run traffic
-  variation only, not run-to-run.]) <fig-gpu>
+  step-time meters where the simulator is not saturated (dashed). The vertical bar beside each
+  H100 point is the interquartile range of that meter recomputed in ten-second windows of the same
+  run — a description of within-run traffic variation, not an uncertainty estimate. It is drawn
+  separately because the whole-run share is traffic-weighted and need not lie inside the quartiles
+  of its windows.]) <fig-gpu>
 
 *The meters still disagree.* The token meter assigns search 16.5–18.9% of the bill; the
 time-share meter assigns 4.7–5.3%, a disagreement of 11.7–13.7 points at every load (@tab-gpu,
@@ -472,19 +474,24 @@ level, before repetitions and baseline measurements. Translating such a referenc
 of a fixed rental bill would still require an overhead-allocation policy, so it bounds the
 metering question rather than closing it.
 
-*How much of that gap is noise?* One two-minute run per load level carries no error bar, so we
-recomputed both meters inside consecutive ten-second windows of each run, normalizing within the
-window and discarding the first one: while the request pipeline fills, the requests that have
+*How steady is that gap within a run?* One two-minute run per load level carries no error bar, so
+we recomputed both meters inside consecutive ten-second windows of each run, normalizing within
+the window and discarding the first one: while the request pipeline fills, the requests that have
 *completed* are disproportionately the short ones, which biases any share computed by completion
 time, and that window sits 3–4× above the rest at every load. Over the eleven remaining windows
 the token-versus-time divergence has a median of 9.3, 11.7, 12.0 and 12.8 points at the four
-loads, an interquartile range of 2.5 to 7.5 points, and a bootstrap 95% interval for the mean of
-8.3–15.6, 8.9–13.8, 11.0–13.6 and 12.1–16.8 points (@fig-gpu, error bars). No interval approaches
-zero: within these runs, the direction and the rough size of the disagreement are stable, and the
-low-load estimate is the noisiest because a ten-second window there holds only about 35 completed
-requests. This bounds the variation contributed by the traffic sample *inside* a run and nothing
-more; run-to-run and seed-to-seed variation would need repeated runs, which the harness now
-supports (§11) but which this dataset does not contain.
+loads, with an interquartile range of 2.5 to 7.5 points, and every window at every load is
+positive. The low-load numbers move the most, because a ten-second window there holds only about
+35 completed requests.
+
+These are descriptive statistics of one run, not an estimate of uncertainty. The windows are
+consecutive slices of a single traffic sample rather than independent observations, so we do not
+attach a confidence interval to them, and nothing here bounds how far a second run at the same
+load would land. @fig-gpu draws the same quartiles beside each meter, separately from the
+whole-run point: the whole-run share is weighted by each window's traffic, so it need not fall
+inside the quartiles of its own windows, and at three of the eight points it does not. Run-to-run
+and seed-to-seed variation needs repeated runs, which the harness now supports (§11) and this
+dataset does not contain.
 
 *Utilization is not a cost signal.* `nvidia-smi` reported 97% utilization at the 2 requests/s load
 and 99% at 4, 8 and 16, while throughput rose 7×. vLLM had at least one running request in 97–100% of
@@ -582,9 +589,10 @@ loopback collectives inflate decode and communication costs. §9 re-measures the
 with vLLM on an H100, where its direction holds and its size is smaller. That run covers one GPU,
 one model, one two-minute run per load level and synthetic traffic, and its multi-turn prompts
 append synthetic assistant tokens, so cross-turn prefix reuse excludes previous answers. The
-ten-second window analysis in §9 bounds only the variation from the traffic sample within each
-run. It cannot see run-to-run variance, warm-up effects that persist across a whole run, or
-anything specific to this droplet, this driver or this model; a campaign of repeated runs per load
+ten-second window analysis in §9 describes the variation within each run and is not an
+uncertainty estimate: its windows are consecutive slices of one traffic sample, not independent
+observations. It cannot see run-to-run variance, warm-up effects that persist across a whole run,
+or anything specific to this droplet, this driver or this model; a campaign of repeated runs per load
 level — which `bench.py --repeats` now performs, interleaving the load levels so drift during the
 session does not land on one of them — is the experiment that would bound those, and we have not
 yet paid for it. Treat the 12–14 point result as one well-instrumented observation, not an
@@ -595,7 +603,7 @@ and pagination semantics as documented, not every field of the live responses.
 
 = Reproducibility
 
-Everything in this paper regenerates from the repository, archived as release 0.2.2 at
+Everything in this paper regenerates from the repository, archived as release 0.2.3 at
 #link("https://doi.org/10.5281/zenodo.22761012")[doi:10.5281/zenodo.22761012]:
 
 ```
