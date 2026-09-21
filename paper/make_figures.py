@@ -451,10 +451,24 @@ def gpu_validation() -> None:
     def search(split: dict[str, float]) -> float:
         return split["search"] / (1 - split.get("__overhead__", 0.0))
 
-    c.plot(rates, [search(r["meters"]["tokens"]) for r in runs], color=CAT[0], marker="o",
-           markersize=3.5, label="tokens (H100)")
-    c.plot(rates, [search(r["meters"]["time_share"]) for r in runs], color=CAT[1], marker="o",
-           markersize=3.5, label="time share (H100)")
+    # Error bars are the interquartile range of the same meter recomputed inside
+    # ten-second windows of the run: within-run traffic variation only, not
+    # run-to-run. Absent when a run is too short to window.
+    def iqr(run: dict, key: str) -> tuple[float, float]:
+        w = (run.get("within_run") or {}).get(key)
+        if not w:
+            return 0.0, 0.0
+        mid = search(run["meters"]["tokens" if key == "search_tokens" else "time_share"]) * 100
+        return max(0.0, mid - w["p25"]) / 100, max(0.0, w["p75"] - mid) / 100
+
+    for key, meter, color, label in (
+        ("search_tokens", "tokens", CAT[0], "tokens (H100)"),
+        ("search_time_share", "time_share", CAT[1], "time share (H100)"),
+    ):
+        lo, hi = zip(*[iqr(r, key) for r in runs], strict=False)
+        c.errorbar(rates, [search(r["meters"][meter]) for r in runs], yerr=[lo, hi],
+                   color=color, marker="o", markersize=3.5, label=label,
+                   elinewidth=0.8, capsize=2)
     # Simulator points only where it is not saturated, so the comparison is fair.
     healthy = [r for r in runs if max(r["simulator"]["ttft_p50_s"].values()) < 1.0]
     c.plot([r["rate_rps"] for r in healthy],
