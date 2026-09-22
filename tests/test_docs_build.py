@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -22,6 +23,10 @@ def test_site_builds_with_no_broken_links(tmp_path):
     assert (tmp_path / "docs" / "paper" / "unalloc-case-studies.pdf").stat().st_size > 100_000
     landing = (tmp_path / "docs" / "index.html").read_text()
     assert "paper/unalloc-case-studies.pdf" in landing
+    assert 'href="https://arxiv.org/abs/2609.24991"' in landing
+    ld = landing.split('<script type="application/ld+json">', 1)[1].split("</script>", 1)[0]
+    graph = json.loads(ld)["@graph"]
+    assert {node["@type"] for node in graph} == {"ScholarlyArticle", "SoftwareSourceCode"}
     post = (tmp_path / "docs" / "blog" / "who-pays-for-the-kv-cache.html").read_text()
     assert 'href="../explorer.html"' in post
     assert ".md\"" not in post

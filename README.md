@@ -5,11 +5,11 @@
 [![ci](https://github.com/timurista/unalloc/actions/workflows/ci.yml/badge.svg)](https://github.com/timurista/unalloc/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/timurista/unalloc/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://github.com/timurista/unalloc/blob/main/pyproject.toml)
-[![Paper](https://img.shields.io/badge/paper-PDF-1f5b45.svg)](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf)
+[![arXiv](https://img.shields.io/badge/arXiv-2609.24991-b31b1b.svg)](https://arxiv.org/abs/2609.24991)
 [![Explorer](https://img.shields.io/badge/explorer-live-1f5b45.svg)](https://timurista.github.io/unalloc/explorer.html)
 [![DOI](https://zenodo.org/badge/1368528624.svg)](https://doi.org/10.5281/zenodo.22761012)
 
-**Project site: [timurista.github.io/unalloc](https://timurista.github.io/unalloc/)**, with the findings, case studies, [paper (PDF)](https://timurista.github.io/unalloc/paper/unalloc-case-studies.pdf), [blog post](https://timurista.github.io/unalloc/blog/who-pays-for-the-kv-cache.html), [GPU addendum](https://timurista.github.io/unalloc/blog/gpu-validation.html) and [ledger explorer](https://timurista.github.io/unalloc/explorer.html).
+**Project site: [timurista.github.io/unalloc](https://timurista.github.io/unalloc/)**, with the findings, case studies, [paper (arXiv:2609.24991)](https://arxiv.org/abs/2609.24991), [blog post](https://timurista.github.io/unalloc/blog/who-pays-for-the-kv-cache.html), [GPU addendum](https://timurista.github.io/unalloc/blog/gpu-validation.html) and [ledger explorer](https://timurista.github.io/unalloc/explorer.html).
 
 OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Getting both into one view is possible today — OpenCost has an OpenAI plugin — but the answer still depends on a join nobody checks: the same dollar can arrive through both your gateway and your provider bill, and the labels that say who owns it are set per workload, not per pod template. `unalloc` pulls all four sources into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team — and how much of the rest was only rescued by a fallback key.
 
@@ -151,7 +151,7 @@ Two design choices worth calling out:
 
 ## Case studies and paper
 
-Six studies push real (or realistically simulated) inference workloads through unalloc's own adapters, including a run with vLLM on an NVIDIA H100. They exposed nine defects in the tool along the way, all fixed with regression tests, and they're written up as a paper: **[paper/unalloc-case-studies.pdf](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf)**. For the readable version, see the [blog post](https://timurista.github.io/unalloc/blog/who-pays-for-the-kv-cache.html) and the [GPU addendum](https://timurista.github.io/unalloc/blog/gpu-validation.html) on the [project site](https://timurista.github.io/unalloc/).
+Six studies push real (or realistically simulated) inference workloads through unalloc's own adapters, including a run with vLLM on an NVIDIA H100. They exposed nine defects in the tool along the way, all fixed with regression tests, and they're written up as a paper: **[Who Pays for the KV Cache? (arXiv:2609.24991)](https://arxiv.org/abs/2609.24991)**, a preprint that has not been peer reviewed. The PDF built from this repository is at [paper/unalloc-case-studies.pdf](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf). For the readable version, see the [blog post](https://timurista.github.io/unalloc/blog/who-pays-for-the-kv-cache.html) and the [GPU addendum](https://timurista.github.io/unalloc/blog/gpu-validation.html) on the [project site](https://timurista.github.io/unalloc/).
 
 | Study | What runs | Headline |
 | --- | --- | --- |
@@ -217,7 +217,22 @@ ruff check . && pytest
 
 ## Citing
 
-If you use unalloc or its case studies, please cite the archived release. GitHub's "Cite this repository" button produces the same entry from [`CITATION.cff`](https://github.com/timurista/unalloc/blob/main/CITATION.cff).
+If you use the findings, please cite the paper, a preprint on arXiv ([arXiv:2609.24991](https://arxiv.org/abs/2609.24991), cs.DC):
+
+```bibtex
+@misc{urista_kvcache_2026,
+  author        = {Urista, Timothy},
+  title         = {Who Pays for the {KV} Cache? Attributing Shared {AI} Inference Spend Across {Kubernetes} and {LLM} Provider Bills},
+  year          = {2026},
+  eprint        = {2609.24991},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.DC},
+  doi           = {10.48550/arXiv.2609.24991},
+  url           = {https://arxiv.org/abs/2609.24991}
+}
+```
+
+If you use the software itself, cite the archived release. GitHub's "Cite this repository" button produces the same entry from [`CITATION.cff`](https://github.com/timurista/unalloc/blob/main/CITATION.cff).
 
 - **All versions:** [doi:10.5281/zenodo.22761012](https://doi.org/10.5281/zenodo.22761012), which always resolves to the latest release — currently 0.2.3, the code the paper describes
 - **Version 0.2.1:** [doi:10.5281/zenodo.22761013](https://doi.org/10.5281/zenodo.22761013)

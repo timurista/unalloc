@@ -10,7 +10,7 @@ Ask an ML platform team what a single AI feature costs and you'll usually get tw
 
 The Kubernetes side, often OpenCost, knows what your GPU pods cost. The API side, meaning your LiteLLM gateway plus the OpenAI and Anthropic billing consoles, knows what your tokens cost. A retrieval-augmented "answer" feature touches both: a vector database and an embedding job on the cluster, maybe a self-hosted model on a GPU pool, and a frontier model behind the gateway. Neither system can tell you what the feature costs, and neither can tell you the number finance actually wants: **how much of this month's AI spend belongs to nobody?**
 
-I built a small tool for that question, [unalloc](https://github.com/timurista/unalloc). Then I tried to break it with inference workloads that behave like production, and wrote the results up as a [paper](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf). This post is the readable version: what I measured, what surprised me, and what I'd tell a data science team that is about to set up showback for LLM costs.
+I built a small tool for that question, [unalloc](https://github.com/timurista/unalloc). Then I tried to break it with inference workloads that behave like production, and wrote the results up as a paper, now a preprint on arXiv: [arXiv:2609.24991](https://arxiv.org/abs/2609.24991). It has not been peer reviewed yet, and I'd welcome critique of the methods. This post is the readable version: what I measured, what surprised me, and what I'd tell a data science team that is about to set up showback for LLM costs.
 
 ## The tool in sixty seconds
 
@@ -135,4 +135,4 @@ make ui              # the ledger explorer at http://127.0.0.1:8765
 
 If you'd rather click than clone, the [ledger explorer](https://timurista.github.io/unalloc/explorer.html) runs every dataset from this post in your browser: pick the label that means "owner", add fallbacks, and watch each row resolve. There's also a companion notebook (`case_studies/unalloc_case_studies.ipynb`) and a dev container with a small Postgres if you'd rather not touch your machine. If you run a gateway or OpenCost in production, a scrubbed payload from your provider is the most useful contribution you could make.
 
-*Code: [github.com/timurista/unalloc](https://github.com/timurista/unalloc) · Paper: [unalloc-case-studies.pdf](https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf) · All figures are by the author.*
+*Code: [github.com/timurista/unalloc](https://github.com/timurista/unalloc) · Paper: [arXiv:2609.24991](https://arxiv.org/abs/2609.24991) · All figures are by the author.*

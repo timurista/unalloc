@@ -110,4 +110,4 @@ python -m case_studies.gpu_validation.analyze                              # loc
 python -m case_studies.gpu_validation.render_evidence                      # the images above
 ```
 
-*Code and raw data: [github.com/timurista/unalloc](https://github.com/timurista/unalloc). All figures and terminal captures are by the author.*
+*Code and raw data: [github.com/timurista/unalloc](https://github.com/timurista/unalloc). Paper: [arXiv:2609.24991](https://arxiv.org/abs/2609.24991), §9. All figures and terminal captures are by the author.*

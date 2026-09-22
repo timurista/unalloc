@@ -46,6 +46,13 @@ FONTS = (
     "&family=Inter+Tight:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap"
 )
 PAPER = "paper/unalloc-case-studies.pdf"
+ARXIV_ID = "2609.24991"
+ARXIV = f"https://arxiv.org/abs/{ARXIV_ID}"
+ARXIV_DOI = f"10.48550/arXiv.{ARXIV_ID}"
+PAPER_TITLE = (
+    "Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes "
+    "and LLM Provider Bills"
+)
 esc = html.escape
 
 POSTS = (
@@ -56,7 +63,7 @@ POSTS = (
 
 NAV = (
     ("index.html", "Overview"),
-    (PAPER, "Paper"),
+    (ARXIV, "Paper"),
     ("blog/who-pays-for-the-kv-cache.html", "Blog post"),
     ("blog/gpu-validation.html", "GPU addendum"),
     ("explorer.html", "Explorer"),
@@ -64,7 +71,7 @@ NAV = (
 )
 
 
-def page(title: str, body: str, *, depth: int, current: str, description: str) -> str:
+def page(title: str, body: str, *, depth: int, current: str, description: str, head: str = "") -> str:
     """Wrap a page body in the shared shell. `depth` is how many directories below docs/."""
     up = "../" * depth
     current_attr = ' aria-current="page"'
@@ -88,7 +95,7 @@ def page(title: str, body: str, *, depth: int, current: str, description: str) -
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="{FONTS}">
 <link rel="stylesheet" href="{up}assets/site.css">
-</head>
+{head}</head>
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="{up}index.html"><span class="mark" aria-hidden="true">u</span>unalloc</a>
@@ -98,6 +105,7 @@ def page(title: str, body: str, *, depth: int, current: str, description: str) -
 <footer class="site"><div class="wrap">
   <span>Apache-2.0</span>
   <a href="{REPO}">{REPO.removeprefix("https://")}</a>
+  <a href="{ARXIV}">arXiv:{ARXIV_ID}</a>
   <a href="https://doi.org/{DOI}">doi:{DOI}</a>
   <span>Every number on this site is generated from the repository by <code>make pages</code></span>
 </div></footer>
@@ -366,11 +374,11 @@ def landing() -> str:
     <h1>Find the AI spend <em>nobody owns.</em></h1>
     <p class="lede"><code>unalloc</code> joins OpenCost Kubernetes allocations with LiteLLM, OpenAI and Anthropic bills into one exact ledger and reports how much of your AI spend has no owner. Six case studies, one of them on a real H100, show where that attribution breaks.</p>
     <div class="actions">
-      <a class="btn primary" href="{PAPER}">Read the paper</a>
+      <a class="btn primary" href="{ARXIV}">Read the paper on arXiv</a>
       <a class="btn" href="blog/who-pays-for-the-kv-cache.html">Read the blog post</a>
       <a class="btn" href="explorer.html">Open the explorer</a>
     </div>
-    <div class="meta-line"><span>pip install unalloc</span><span>Preprint, not yet peer reviewed</span><a href="https://doi.org/{DOI}">doi:{DOI}</a></div>
+    <div class="meta-line"><span>pip install unalloc</span><a href="{ARXIV}">arXiv:{ARXIV_ID} · preprint, not yet peer reviewed</a><a href="https://doi.org/{DOI}">doi:{DOI}</a></div>
   </div>
   {receipt()}
 </div>
@@ -395,8 +403,8 @@ def landing() -> str:
 <section class="band" id="read"><div class="wrap">
   <header><span class="eyebrow">Read</span><h2>Paper, posts and runbook</h2></header>
   <ul class="reads">
-    <li><a class="title" href="{PAPER}">Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes and LLM Provider Bills</a><span class="fmt">PDF · 13 pages</span>
-      <p>The full paper: the tool, six studies, related work and limitations. Preprint.</p></li>
+    <li><a class="title" href="{ARXIV}">{PAPER_TITLE}</a><span class="fmt">arXiv · 14 pages</span>
+      <p>The full paper: the tool, six studies, related work and limitations. A preprint on arXiv (cs.DC, cross-listed to cs.PF), not yet peer reviewed. <a href="{PAPER}">PDF built from this repository</a>.</p></li>
     <li><a class="title" href="blog/who-pays-for-the-kv-cache.html">Who Pays for the KV Cache?</a><span class="fmt">Blog post</span>
       <p>The readable version: what was measured, what surprised me, and advice for teams setting up LLM showback.</p></li>
     <li><a class="title" href="blog/gpu-validation.html">Addendum: Verified on a Real H100</a><span class="fmt">Blog post</span>
@@ -410,7 +418,18 @@ def landing() -> str:
 
 <section class="band" id="cite"><div class="wrap cite">
   <header><span class="eyebrow">Cite</span><h2>Citing unalloc</h2></header>
-  <p>Every release is archived on Zenodo at <a href="https://doi.org/{DOI}">doi:{DOI}</a>, which resolves to the latest &mdash; currently 0.2.3, the code the paper describes.</p>
+  <p>To cite the findings, cite the paper, <a href="{ARXIV}">arXiv:{ARXIV_ID}</a>.</p>
+  <pre><code>@misc{{urista_kvcache_2026,
+  author        = {{Urista, Timothy}},
+  title         = {{Who Pays for the {{KV}} Cache? Attributing Shared {{AI}} Inference Spend Across {{Kubernetes}} and {{LLM}} Provider Bills}},
+  year          = {{2026}},
+  eprint        = {{{ARXIV_ID}}},
+  archivePrefix = {{arXiv}},
+  primaryClass  = {{cs.DC}},
+  doi           = {{{ARXIV_DOI}}},
+  url           = {{{ARXIV}}}
+}}</code></pre>
+  <p>To cite the software, cite the release. Every release is archived on Zenodo at <a href="https://doi.org/{DOI}">doi:{DOI}</a>, which resolves to the latest &mdash; currently 0.2.3, the code the paper describes.</p>
   <pre><code>@software{{urista_unalloc_2026,
   author  = {{Urista, Timothy}},
   title   = {{unalloc: find the AI spend nobody owns}},
@@ -427,8 +446,46 @@ def landing() -> str:
         depth=0,
         current="index.html",
         description="Open-source tool and case studies on attributing shared AI inference spend "
-        "across Kubernetes and LLM provider bills.",
+        f"across Kubernetes and LLM provider bills. Paper: arXiv:{ARXIV_ID}.",
+        head=structured_data(),
     )
+
+
+def structured_data() -> str:
+    """schema.org JSON-LD tying the site, the arXiv paper and the Zenodo archive together."""
+    author = {"@type": "Person", "name": "Timothy Urista", "url": "https://timurista.ai"}
+    graph = [
+        {
+            "@type": "ScholarlyArticle",
+            "@id": ARXIV,
+            "headline": PAPER_TITLE,
+            "name": PAPER_TITLE,
+            "author": author,
+            "datePublished": "2026-09-21",
+            "url": ARXIV,
+            "sameAs": [f"https://doi.org/{ARXIV_DOI}", f"https://arxiv.org/pdf/{ARXIV_ID}"],
+            "identifier": [f"arXiv:{ARXIV_ID}", f"doi:{ARXIV_DOI}"],
+            "publisher": {"@type": "Organization", "name": "arXiv"},
+            "about": ["cost attribution", "LLM inference", "KV cache", "Kubernetes", "FinOps"],
+            "isBasedOn": REPO,
+        },
+        {
+            "@type": "SoftwareSourceCode",
+            "@id": REPO,
+            "name": "unalloc",
+            "description": "Joins OpenCost allocations with LLM provider bills and reports the AI "
+            "spend nobody owns.",
+            "author": author,
+            "codeRepository": REPO,
+            "programmingLanguage": "Python",
+            "license": "https://www.apache.org/licenses/LICENSE-2.0",
+            "sameAs": [f"https://doi.org/{DOI}", "https://pypi.org/project/unalloc/"],
+            "subjectOf": {"@id": ARXIV},
+        },
+    ]
+    data = json.dumps({"@context": "https://schema.org", "@graph": graph}, indent=1)
+    data = data.replace("</", "<\\/")  # never close the script element early
+    return f'<script type="application/ld+json">\n{data}\n</script>\n'
 
 
 # --- explorer -------------------------------------------------------------------------------

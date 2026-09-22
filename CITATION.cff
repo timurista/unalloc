@@ -33,11 +33,17 @@ abstract: >-
   studies of inference cost attribution, including real PyTorch KV-cache and
   torch.distributed inference.
 preferred-citation:
-  type: report
+  type: article
   title: "Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes and LLM Provider Bills"
   authors:
     - family-names: Urista
       given-names: Timothy
   year: 2026
   month: 9
-  url: "https://github.com/timurista/unalloc/blob/main/paper/unalloc-case-studies.pdf"
+  journal: "arXiv preprint"
+  doi: 10.48550/arXiv.2609.24991
+  identifiers:
+    - type: other
+      value: "arXiv:2609.24991"
+      description: "arXiv identifier (cs.DC; cross-listed to cs.PF)"
+  url: "https://arxiv.org/abs/2609.24991"

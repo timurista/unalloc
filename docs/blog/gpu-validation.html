@@ -14,7 +14,7 @@
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="../index.html"><span class="mark" aria-hidden="true">u</span>unalloc</a>
-  <nav aria-label="Site"><a href="../index.html">Overview</a><a href="../paper/unalloc-case-studies.pdf">Paper</a><a href="../blog/who-pays-for-the-kv-cache.html">Blog post</a><a href="../blog/gpu-validation.html" aria-current="page">GPU addendum</a><a href="../explorer.html">Explorer</a><a href="https://github.com/timurista/unalloc">GitHub</a></nav>
+  <nav aria-label="Site"><a href="../index.html">Overview</a><a href="https://arxiv.org/abs/2609.24991">Paper</a><a href="../blog/who-pays-for-the-kv-cache.html">Blog post</a><a href="../blog/gpu-validation.html" aria-current="page">GPU addendum</a><a href="../explorer.html">Explorer</a><a href="https://github.com/timurista/unalloc">GitHub</a></nav>
 </div></header>
 <main class="post-layout has-toc"><article class="post"><a class="crumb" href="../index.html">← unalloc</a><h1 id="addendum-verified-on-a-real-h100">Addendum: Verified on a Real H100</h1>
 <p><em>An attachment to "<a href="who-pays-for-the-kv-cache.html">Who Pays for the KV Cache?</a>". The main post's PyTorch timings came from a CPU. This addendum re-runs the metering experiment with production serving software on a datacenter GPU, and shows exactly how the machine was brought up, verified and torn down.</em></p>
@@ -215,10 +215,11 @@
 python -m case_studies.gpu_validation.analyze                              # local analysis
 python -m case_studies.gpu_validation.render_evidence                      # the images above
 </code></pre>
-<p><em>Code and raw data: <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a>. All figures and terminal captures are by the author.</em></p></article><aside class="toc" aria-label="On this page"><p>On this page</p><ol><li><a href="#tldr">TL;DR</a></li><li><a href="#the-machine">The machine</a></li><li><a href="#what-ran">What ran</a></li><li><a href="#results">Results</a></li><li><a href="#how-i-brought-it-up-verified-it-and-tore-it-down">How I brought it up, verified it, and tore it down</a></li><li><a href="#caveats">Caveats</a></li><li><a href="#reproduce-it">Reproduce it</a></li></ol></aside></main>
+<p><em>Code and raw data: <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a>. Paper: <a href="https://arxiv.org/abs/2609.24991">arXiv:2609.24991</a>, §9. All figures and terminal captures are by the author.</em></p></article><aside class="toc" aria-label="On this page"><p>On this page</p><ol><li><a href="#tldr">TL;DR</a></li><li><a href="#the-machine">The machine</a></li><li><a href="#what-ran">What ran</a></li><li><a href="#results">Results</a></li><li><a href="#how-i-brought-it-up-verified-it-and-tore-it-down">How I brought it up, verified it, and tore it down</a></li><li><a href="#caveats">Caveats</a></li><li><a href="#reproduce-it">Reproduce it</a></li></ol></aside></main>
 <footer class="site"><div class="wrap">
   <span>Apache-2.0</span>
   <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a>
+  <a href="https://arxiv.org/abs/2609.24991">arXiv:2609.24991</a>
   <a href="https://doi.org/10.5281/zenodo.22761012">doi:10.5281/zenodo.22761012</a>
   <span>Every number on this site is generated from the repository by <code>make pages</code></span>
 </div></footer>

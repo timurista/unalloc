@@ -5,16 +5,77 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0B0F14">
 <title>unalloc: find the AI spend nobody owns</title>
-<meta name="description" content="Open-source tool and case studies on attributing shared AI inference spend across Kubernetes and LLM provider bills.">
+<meta name="description" content="Open-source tool and case studies on attributing shared AI inference spend across Kubernetes and LLM provider bills. Paper: arXiv:2609.24991.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/site.css">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "ScholarlyArticle",
+   "@id": "https://arxiv.org/abs/2609.24991",
+   "headline": "Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes and LLM Provider Bills",
+   "name": "Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes and LLM Provider Bills",
+   "author": {
+    "@type": "Person",
+    "name": "Timothy Urista",
+    "url": "https://timurista.ai"
+   },
+   "datePublished": "2026-09-21",
+   "url": "https://arxiv.org/abs/2609.24991",
+   "sameAs": [
+    "https://doi.org/10.48550/arXiv.2609.24991",
+    "https://arxiv.org/pdf/2609.24991"
+   ],
+   "identifier": [
+    "arXiv:2609.24991",
+    "doi:10.48550/arXiv.2609.24991"
+   ],
+   "publisher": {
+    "@type": "Organization",
+    "name": "arXiv"
+   },
+   "about": [
+    "cost attribution",
+    "LLM inference",
+    "KV cache",
+    "Kubernetes",
+    "FinOps"
+   ],
+   "isBasedOn": "https://github.com/timurista/unalloc"
+  },
+  {
+   "@type": "SoftwareSourceCode",
+   "@id": "https://github.com/timurista/unalloc",
+   "name": "unalloc",
+   "description": "Joins OpenCost allocations with LLM provider bills and reports the AI spend nobody owns.",
+   "author": {
+    "@type": "Person",
+    "name": "Timothy Urista",
+    "url": "https://timurista.ai"
+   },
+   "codeRepository": "https://github.com/timurista/unalloc",
+   "programmingLanguage": "Python",
+   "license": "https://www.apache.org/licenses/LICENSE-2.0",
+   "sameAs": [
+    "https://doi.org/10.5281/zenodo.22761012",
+    "https://pypi.org/project/unalloc/"
+   ],
+   "subjectOf": {
+    "@id": "https://arxiv.org/abs/2609.24991"
+   }
+  }
+ ]
+}
+</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="index.html"><span class="mark" aria-hidden="true">u</span>unalloc</a>
-  <nav aria-label="Site"><a href="index.html" aria-current="page">Overview</a><a href="paper/unalloc-case-studies.pdf">Paper</a><a href="blog/who-pays-for-the-kv-cache.html">Blog post</a><a href="blog/gpu-validation.html">GPU addendum</a><a href="explorer.html">Explorer</a><a href="https://github.com/timurista/unalloc">GitHub</a></nav>
+  <nav aria-label="Site"><a href="index.html" aria-current="page">Overview</a><a href="https://arxiv.org/abs/2609.24991">Paper</a><a href="blog/who-pays-for-the-kv-cache.html">Blog post</a><a href="blog/gpu-validation.html">GPU addendum</a><a href="explorer.html">Explorer</a><a href="https://github.com/timurista/unalloc">GitHub</a></nav>
 </div></header>
 <main>
 <div class="wrap hero">
@@ -23,11 +84,11 @@
     <h1>Find the AI spend <em>nobody owns.</em></h1>
     <p class="lede"><code>unalloc</code> joins OpenCost Kubernetes allocations with LiteLLM, OpenAI and Anthropic bills into one exact ledger and reports how much of your AI spend has no owner. Six case studies, one of them on a real H100, show where that attribution breaks.</p>
     <div class="actions">
-      <a class="btn primary" href="paper/unalloc-case-studies.pdf">Read the paper</a>
+      <a class="btn primary" href="https://arxiv.org/abs/2609.24991">Read the paper on arXiv</a>
       <a class="btn" href="blog/who-pays-for-the-kv-cache.html">Read the blog post</a>
       <a class="btn" href="explorer.html">Open the explorer</a>
     </div>
-    <div class="meta-line"><span>pip install unalloc</span><span>Preprint, not yet peer reviewed</span><a href="https://doi.org/10.5281/zenodo.22761012">doi:10.5281/zenodo.22761012</a></div>
+    <div class="meta-line"><span>pip install unalloc</span><a href="https://arxiv.org/abs/2609.24991">arXiv:2609.24991 · preprint, not yet peer reviewed</a><a href="https://doi.org/10.5281/zenodo.22761012">doi:10.5281/zenodo.22761012</a></div>
   </div>
   <figure class="receipt" aria-label="A sample month of AI spend attributed by team">
   <header><strong>AI spend · sample month</strong><span>15 lines · 4 sources</span></header>
@@ -62,8 +123,8 @@
 <section class="band" id="read"><div class="wrap">
   <header><span class="eyebrow">Read</span><h2>Paper, posts and runbook</h2></header>
   <ul class="reads">
-    <li><a class="title" href="paper/unalloc-case-studies.pdf">Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes and LLM Provider Bills</a><span class="fmt">PDF · 13 pages</span>
-      <p>The full paper: the tool, six studies, related work and limitations. Preprint.</p></li>
+    <li><a class="title" href="https://arxiv.org/abs/2609.24991">Who Pays for the KV Cache? Attributing Shared AI Inference Spend Across Kubernetes and LLM Provider Bills</a><span class="fmt">arXiv · 14 pages</span>
+      <p>The full paper: the tool, six studies, related work and limitations. A preprint on arXiv (cs.DC, cross-listed to cs.PF), not yet peer reviewed. <a href="paper/unalloc-case-studies.pdf">PDF built from this repository</a>.</p></li>
     <li><a class="title" href="blog/who-pays-for-the-kv-cache.html">Who Pays for the KV Cache?</a><span class="fmt">Blog post</span>
       <p>The readable version: what was measured, what surprised me, and advice for teams setting up LLM showback.</p></li>
     <li><a class="title" href="blog/gpu-validation.html">Addendum: Verified on a Real H100</a><span class="fmt">Blog post</span>
@@ -77,7 +138,18 @@
 
 <section class="band" id="cite"><div class="wrap cite">
   <header><span class="eyebrow">Cite</span><h2>Citing unalloc</h2></header>
-  <p>Every release is archived on Zenodo at <a href="https://doi.org/10.5281/zenodo.22761012">doi:10.5281/zenodo.22761012</a>, which resolves to the latest &mdash; currently 0.2.3, the code the paper describes.</p>
+  <p>To cite the findings, cite the paper, <a href="https://arxiv.org/abs/2609.24991">arXiv:2609.24991</a>.</p>
+  <pre><code>@misc{urista_kvcache_2026,
+  author        = {Urista, Timothy},
+  title         = {Who Pays for the {KV} Cache? Attributing Shared {AI} Inference Spend Across {Kubernetes} and {LLM} Provider Bills},
+  year          = {2026},
+  eprint        = {2609.24991},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.DC},
+  doi           = {10.48550/arXiv.2609.24991},
+  url           = {https://arxiv.org/abs/2609.24991}
+}</code></pre>
+  <p>To cite the software, cite the release. Every release is archived on Zenodo at <a href="https://doi.org/10.5281/zenodo.22761012">doi:10.5281/zenodo.22761012</a>, which resolves to the latest &mdash; currently 0.2.3, the code the paper describes.</p>
   <pre><code>@software{urista_unalloc_2026,
   author  = {Urista, Timothy},
   title   = {unalloc: find the AI spend nobody owns},
@@ -91,6 +163,7 @@
 <footer class="site"><div class="wrap">
   <span>Apache-2.0</span>
   <a href="https://github.com/timurista/unalloc">github.com/timurista/unalloc</a>
+  <a href="https://arxiv.org/abs/2609.24991">arXiv:2609.24991</a>
   <a href="https://doi.org/10.5281/zenodo.22761012">doi:10.5281/zenodo.22761012</a>
   <span>Every number on this site is generated from the repository by <code>make pages</code></span>
 </div></footer>
