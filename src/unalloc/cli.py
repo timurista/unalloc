@@ -1,13 +1,15 @@
 """unalloc command line interface.
 
-Three commands, one question each:
+Four commands, one question each:
   report      how much of our AI spend is unattributed?
   labels      which cost objects should we fix first?
   reconcile   does the ledger agree with the invoice?
+  verify      can an earlier report be rebuilt from what was kept?
 """
 
 from __future__ import annotations
 
+import json
 import os
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -16,9 +18,19 @@ from pathlib import Path
 import typer
 
 from unalloc import __version__
-from unalloc.core.attribute import attribute, unallocated_rows
+from unalloc.core.attribute import AttributionReport, attribute, unallocated_rows
 from unalloc.core.models import CostRow, Invoice
-from unalloc.core.normalize import dimensions
+from unalloc.core.normalize import DEFAULT_ALIASES, dimensions
+from unalloc.core.provenance import (
+    FAILED,
+    LOADED,
+    MISSING,
+    SourceInput,
+    canonical,
+    conservation_errors,
+    digest,
+    partial,
+)
 from unalloc.core.reconcile import DEFAULT_TOLERANCE_PCT, reconcile
 from unalloc.render import table as render
 from unalloc.sources import REGISTRY
@@ -66,9 +78,17 @@ def _load(
     fixtures: bool,
     days: int,
     fixture_dir: Path,
-) -> list[CostRow]:
+) -> tuple[list[CostRow], list[SourceInput], dict[str, bytes]]:
+    """Load every requested source, recording what each one contributed.
+
+    Returns the rows, one SourceInput per requested source (including the
+    ones that failed or had no input), and the exact payload bytes that were
+    parsed, keyed by source, so a caller can retain them for a later replay.
+    """
     start, end = _window(days)
     rows: list[CostRow] = []
+    inputs: list[SourceInput] = []
+    payloads: dict[str, bytes] = {}
     for name in sources:
         if name not in REGISTRY:
             raise typer.BadParameter(
@@ -81,15 +101,55 @@ def _load(
         if fixtures:
             path = fixture_dir / FIXTURE_FILES[name]
             if not path.exists():
-                typer.secho(f"skipping {name}: no fixture at {path}", fg="yellow")
+                typer.secho(f"skipping {name}: no fixture at {path}", fg="yellow", err=True)
+                inputs.append(SourceInput(name, MISSING, detail=f"no input at {path.name}"))
                 continue
-            rows.extend(adapter.from_fixture(path))
+            data = path.read_bytes()
+            parsed = adapter.parse(json.loads(data))
         else:
             try:
-                rows.extend(adapter.fetch(start, end))
+                payload = adapter.fetch_payload(start, end)
             except Exception as exc:
                 typer.secho(f"{name}: {exc}", fg="red", err=True)
-    return rows
+                inputs.append(SourceInput(name, FAILED, detail=str(exc)[:200]))
+                continue
+            # Digest the canonical form, which is also what --keep-inputs
+            # writes, so a retained file always matches its recorded digest.
+            data = canonical(payload)
+            parsed = adapter.parse(payload)
+        rows.extend(parsed)
+        payloads[name] = data
+        inputs.append(
+            SourceInput(name, LOADED, sha256=digest(data), bytes=len(data), rows=len(parsed))
+        )
+    return rows, inputs, payloads
+
+
+def _result(result: AttributionReport) -> dict[str, object]:
+    """The report body. Its canonical digest is what a replay must match."""
+    return {
+        "dimension": result.dimension,
+        "total_usd": result.total_usd,
+        "unallocated_usd": result.unallocated_usd,
+        "unallocated_pct": result.unallocated_pct,
+        "fallback_dimensions": result.fallback_dimensions,
+        "fallback_usd": result.fallback_usd,
+        "by_source": result.by_source,
+        "buckets": result.buckets,
+    }
+
+
+def _warn_partial(inputs: list[SourceInput]) -> None:
+    gaps = partial(inputs)
+    if gaps:
+        loaded = len(inputs) - len(gaps)
+        names = ", ".join(f"{item.source} {item.status}" for item in gaps)
+        typer.secho(
+            f"partial ledger: {loaded} of {len(inputs)} sources loaded ({names}). "
+            "Percentages cover the loaded sources only.",
+            fg="yellow",
+            err=True,
+        )
 
 
 SourcesOpt = typer.Option(
@@ -132,31 +192,44 @@ def report(
         help="Exit with code 2 when the unallocated share exceeds this percent. "
         "Lets CI fail a deploy that ships unlabeled spend.",
     ),
+    keep_inputs: Path | None = typer.Option(
+        None,
+        "--keep-inputs",
+        help="Write the exact payloads this run parsed into DIR, named like "
+        "fixtures, so `unalloc verify` can rebuild the result later.",
+    ),
 ) -> None:
     """Attribute joined spend and report the unallocated share."""
-    rows = _load(source, fixtures=fixtures, days=days, fixture_dir=fixture_dir)
+    rows, inputs, payloads = _load(
+        source, fixtures=fixtures, days=days, fixture_dir=fixture_dir
+    )
     if not rows:
         typer.secho("No cost rows loaded. Try --fixtures.", fg="yellow")
         raise typer.Exit(code=1)
 
+    if keep_inputs is not None:
+        keep_inputs.mkdir(parents=True, exist_ok=True)
+        for name, data in payloads.items():
+            (keep_inputs / FIXTURE_FILES[name]).write_bytes(data)
+
     result = attribute(rows, dimension, fallback_dimensions=tuple(fallback))
     if as_json:
-        typer.echo(
-            render.to_json(
-                {
-                    "dimension": result.dimension,
-                    "total_usd": result.total_usd,
-                    "unallocated_usd": result.unallocated_usd,
-                    "unallocated_pct": result.unallocated_pct,
-                    "fallback_dimensions": result.fallback_dimensions,
-                    "fallback_usd": result.fallback_usd,
-                    "by_source": result.by_source,
-                    "buckets": result.buckets,
-                }
-            )
-        )
+        body = _result(result)
+        start, end = _window(days)
+        body["provenance"] = {
+            "unalloc_version": __version__,
+            "generated_at": datetime.now(tz=UTC),
+            "mode": "fixtures" if fixtures else "live",
+            # Fixtures carry their own dates; --days does not filter them.
+            "window": None if fixtures else {"start": start, "end": end},
+            "aliases_sha256": digest(canonical(DEFAULT_ALIASES)),
+            "inputs": inputs,
+            "result_sha256": digest(canonical(_result(result))),
+        }
+        typer.echo(render.to_json(body))
     else:
         render.render_report(result, top=top)
+    _warn_partial(inputs)
 
     if budget is not None and result.unallocated_pct > Decimal(str(budget)):
         typer.secho(
@@ -181,7 +254,8 @@ def labels(
     ),
 ) -> None:
     """Show the labeling backlog: unattributed cost objects, priciest first."""
-    rows = _load(source, fixtures=fixtures, days=days, fixture_dir=fixture_dir)
+    rows, inputs, _ = _load(source, fixtures=fixtures, days=days, fixture_dir=fixture_dir)
+    _warn_partial(inputs)
     if not rows:
         # Without this, an unreachable source reads as "Nothing unallocated".
         typer.secho("No cost rows loaded. Try --fixtures.", fg="yellow")
@@ -216,7 +290,8 @@ def reconcile_cmd(
     ),
 ) -> None:
     """Check the ledger against what each provider actually billed."""
-    rows = _load(source, fixtures=fixtures, days=days, fixture_dir=fixture_dir)
+    rows, inputs, _ = _load(source, fixtures=fixtures, days=days, fixture_dir=fixture_dir)
+    _warn_partial(inputs)
     start, end = _window(days)
 
     invoices: list[Invoice] = []
@@ -236,6 +311,94 @@ def reconcile_cmd(
     render.render_reconciliation(
         reconcile(rows, invoices, tolerance_pct=Decimal(str(tolerance)))
     )
+
+
+@app.command()
+def verify(
+    result_file: Path = typer.Argument(
+        ..., help="A `report --json` output that carries a provenance block."
+    ),
+    inputs_dir: Path = typer.Option(
+        ...,
+        "--inputs",
+        help="Directory of retained payloads, e.g. one written by --keep-inputs.",
+    ),
+) -> None:
+    """Rebuild an earlier report from retained inputs and say whether it matches.
+
+    Exit 0: reproduced. Exit 3: the inputs needed are missing or changed, so
+    the result cannot be rebuilt. Exit 4: the inputs match but the result
+    does not, so a rule or the tool changed in between. Exit 5: the recorded
+    result does not conserve its own total.
+    """
+    recorded = json.loads(result_file.read_text())
+    prov = recorded.get("provenance")
+    if not prov:
+        typer.secho(
+            f"{result_file} has no provenance block; it predates `unalloc verify` "
+            "or was not written with --json.",
+            fg="red",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    broken = conservation_errors(recorded)
+    if broken:
+        for line in broken:
+            typer.secho(f"not conserved: {line}", fg="red")
+        raise typer.Exit(code=5)
+
+    problems: list[str] = []
+    rows: list[CostRow] = []
+    for item in prov["inputs"]:
+        name = item["source"]
+        if item["status"] != LOADED:
+            typer.echo(f"{name}: {item['status']} in the original run, not replayed")
+            continue
+        path = inputs_dir / FIXTURE_FILES[name]
+        if not path.exists():
+            problems.append(f"{name}: retained input missing at {path}")
+            continue
+        data = path.read_bytes()
+        found = digest(data)
+        if found != item["sha256"]:
+            problems.append(
+                f"{name}: input changed (recorded {item['sha256'][:19]}, found {found[:19]})"
+            )
+            continue
+        rows.extend(REGISTRY[name]().parse(json.loads(data)))
+
+    if problems:
+        for line in problems:
+            typer.secho(line, fg="red")
+        typer.secho("cannot reconstruct: the recorded inputs are not all available", fg="red")
+        raise typer.Exit(code=3)
+
+    rebuilt = attribute(
+        rows,
+        recorded["dimension"],
+        fallback_dimensions=tuple(recorded["fallback_dimensions"]),
+    )
+    found = digest(canonical(_result(rebuilt)))
+    if found == prov["result_sha256"]:
+        typer.secho(
+            f"reproduced: {rebuilt.unallocated_pct}% unallocated of "
+            f"{render.usd(rebuilt.total_usd)}, result {found[:19]}",
+            fg="green",
+        )
+        return
+
+    typer.secho("inputs match but the result differs", fg="red")
+    typer.echo(
+        f"  unallocated: recorded {recorded['unallocated_pct']}%, "
+        f"rebuilt {rebuilt.unallocated_pct}%"
+    )
+    if prov["unalloc_version"] != __version__:
+        typer.echo(f"  unalloc version: recorded {prov['unalloc_version']}, running {__version__}")
+    aliases = digest(canonical(DEFAULT_ALIASES))
+    if prov["aliases_sha256"] != aliases:
+        typer.echo("  label alias table changed since the original run")
+    raise typer.Exit(code=4)
 
 
 @app.command()

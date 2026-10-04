@@ -20,7 +20,7 @@ class OpenAISource(Source):
     name = "openai"
     default_base_url = "https://api.openai.com/v1"
 
-    def fetch(self, start: datetime, end: datetime) -> list[CostRow]:
+    def fetch_payload(self, start: datetime, end: datetime) -> Any:
         payload = self._get_pages(
             "/organization/costs",
             params={
@@ -31,7 +31,7 @@ class OpenAISource(Source):
                 "limit": 180,
             },
         )
-        return self.parse(payload)
+        return payload
 
     def parse(self, payload: Any) -> list[CostRow]:
         buckets = payload.get("data", []) if isinstance(payload, dict) else payload

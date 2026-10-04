@@ -19,7 +19,7 @@ from unalloc.sources.base import Source, money, parse_ts
 class LiteLLMSource(Source):
     name = "litellm"
 
-    def fetch(self, start: datetime, end: datetime) -> list[CostRow]:
+    def fetch_payload(self, start: datetime, end: datetime) -> Any:
         payload = self._get(
             "/spend/logs",
             params={
@@ -27,7 +27,7 @@ class LiteLLMSource(Source):
                 "end_date": end.date().isoformat(),
             },
         )
-        return self.parse(payload)
+        return payload
 
     def parse(self, payload: Any) -> list[CostRow]:
         records = payload.get("data", payload) if isinstance(payload, dict) else payload

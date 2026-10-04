@@ -12,6 +12,7 @@ from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -133,3 +134,42 @@ def test_opencost_component_sum_stays_exact_without_total(server):
 def test_missing_base_url_names_the_env_var():
     with pytest.raises(ValueError, match="UNALLOC_OPENCOST_URL"):
         OpenCostSource().fetch(START, END)
+
+
+def test_live_run_records_a_failed_source_and_replays_from_kept_inputs(
+    server, tmp_path, monkeypatch
+):
+    # One source answers, one is configured but never reachable. The JSON has
+    # to say the ledger is partial, and the payload that did load has to be
+    # retained in a form `verify` can rebuild from without the network.
+    from typer.testing import CliRunner
+
+    from unalloc.cli import app
+
+    fixture = json.loads(
+        (Path(__file__).resolve().parents[1] / "src/unalloc/fixtures/opencost_allocation.json")
+        .read_text()
+    )
+    base = server(lambda path, query, headers: fixture)
+    monkeypatch.setenv("UNALLOC_OPENCOST_URL", base)
+    monkeypatch.setenv("UNALLOC_LITELLM_URL", "http://127.0.0.1:9")
+
+    kept = tmp_path / "kept"
+    runner = CliRunner()
+    out = runner.invoke(
+        app,
+        ["report", "-s", "opencost", "-s", "litellm", "--json", "--keep-inputs", str(kept)],
+    )
+    assert out.exit_code == 0, out.output
+    body = json.loads(out.stdout)
+    prov = body["provenance"]
+    assert prov["mode"] == "live" and prov["window"]["start"] < prov["window"]["end"]
+    opencost, litellm = prov["inputs"]
+    assert opencost["status"] == "loaded" and opencost["rows"] == 5
+    assert litellm["status"] == "failed" and litellm["detail"]
+    assert "partial ledger: 1 of 2 sources loaded (litellm failed)" in out.stderr
+
+    result = tmp_path / "result.json"
+    result.write_text(out.stdout)
+    replay = runner.invoke(app, ["verify", str(result), "--inputs", str(kept)])
+    assert replay.exit_code == 0, replay.output

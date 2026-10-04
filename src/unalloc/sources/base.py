@@ -50,8 +50,12 @@ class Source(ABC):
     # --- to implement per provider -------------------------------------
 
     @abstractmethod
-    def fetch(self, start: datetime, end: datetime) -> list[CostRow]:
-        """Call the provider and return normalized rows."""
+    def fetch_payload(self, start: datetime, end: datetime) -> Any:
+        """Call the provider and return the raw payload `parse` reads.
+
+        Kept separate from `fetch` so a run can digest and retain exactly what
+        the provider said, and be replayed later through `from_fixture`.
+        """
 
     @abstractmethod
     def parse(self, payload: Any) -> list[CostRow]:
@@ -62,6 +66,10 @@ class Source(ABC):
         """
 
     # --- shared plumbing ------------------------------------------------
+
+    def fetch(self, start: datetime, end: datetime) -> list[CostRow]:
+        """Call the provider and return normalized rows."""
+        return self.parse(self.fetch_payload(start, end))
 
     def from_fixture(self, path: str | Path) -> list[CostRow]:
         with Path(path).open() as handle:

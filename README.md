@@ -125,6 +125,42 @@ Configure sources by environment variable:
 
 Restrict the run with `--source` to avoid double counting: if your traffic goes through LiteLLM, prefer `--source opencost --source litellm` and skip the direct provider adapters, since the same tokens appear in both. The [end-to-end case study](#case-studies-and-paper) measures exactly how much that costs you if you forget.
 
+## Reproducing a result
+
+A percentage that ends up in a finance deck will be questioned later, after the
+source data has moved on. A path is not enough to answer that: a fixture or an
+export can be rewritten under the same name, and a live billing API answers a
+re-run with today's data. So `report --json` carries a `provenance` block, and
+`--keep-inputs` retains the exact payloads it parsed:
+
+```bash
+unalloc report -D team --json --keep-inputs runs/2026-09/ > runs/2026-09.json
+unalloc verify runs/2026-09.json --inputs runs/2026-09/
+# reproduced: 73.5% unallocated of $66,630.38, result sha256:…
+```
+
+The provenance block records the unalloc version, the window (live runs only;
+fixtures carry their own dates), a digest of the label alias table, and one
+entry per requested source: its status, the SHA-256 of the payload bytes, and
+the rows it produced. A source that failed or had no input is recorded as
+`failed` or `missing` rather than dropped, and every command warns on stderr
+when the ledger is partial, because the percentage then covers the loaded
+sources only.
+
+`verify` exits with a code that says which boundary moved:
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | Reproduced: same inputs, same result digest |
+| 3 | Cannot reconstruct: a retained input is missing, or its bytes changed |
+| 4 | Inputs match but the result differs: a rule or the tool changed in between |
+| 5 | The recorded result does not conserve its own total (a dollar counted twice or dropped) |
+
+A digest proves byte identity, not correctness. It cannot tell you a meter was
+accurate or a rule was fair, and it can only rebuild a result when the bytes
+it names were kept. Retained payloads contain your billing data; store them
+like the invoices they came from.
+
 ## How it works
 
 ```
@@ -203,6 +239,7 @@ What `unalloc` does is narrower: read all four sources yourself — OpenCost, a 
 - [ ] Per-feature unit economics using the `quantity`/`unit` fields already carried on `CostRow`
 - [ ] Azure OpenAI and Bedrock adapters
 - [x] `--budget` mode: exit non-zero when unallocated share crosses a threshold, for CI
+- [x] Result provenance and `unalloc verify`: rebuild an earlier report from retained inputs, or say why it can't be
 - [ ] `--exclude label=value` on a source, so gateway traffic can be dropped from provider billing instead of whole sources
 - [ ] Warn when distinct raw label keys collide on one canonical key
 
@@ -234,14 +271,14 @@ If you use the findings, please cite the paper, a preprint on arXiv ([arXiv:2609
 
 If you use the software itself, cite the archived release. GitHub's "Cite this repository" button produces the same entry from [`CITATION.cff`](https://github.com/timurista/unalloc/blob/main/CITATION.cff).
 
-- **All versions:** [doi:10.5281/zenodo.22761012](https://doi.org/10.5281/zenodo.22761012), which always resolves to the latest release — currently 0.2.3, the code the paper describes
+- **All versions:** [doi:10.5281/zenodo.22761012](https://doi.org/10.5281/zenodo.22761012), which always resolves to the latest release — currently 0.3.0. The paper describes 0.2.3; 0.3.0 adds result provenance and `unalloc verify` and changes no attribution result
 - **Version 0.2.1:** [doi:10.5281/zenodo.22761013](https://doi.org/10.5281/zenodo.22761013)
 
 ```bibtex
 @software{urista_unalloc_2026,
   author  = {Urista, Timothy},
   title   = {unalloc: find the AI spend nobody owns},
-  version = {0.2.3},
+  version = {0.3.0},
   year    = {2026},
   doi     = {10.5281/zenodo.22761012},
   url     = {https://github.com/timurista/unalloc}

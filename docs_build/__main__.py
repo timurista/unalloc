@@ -336,6 +336,10 @@ USES = (
     ("Gate deploys on ownership",
      "Fail CI when too much spend has no owner. Exit code 2 above the budget.",
      "unalloc report -D team --budget 10"),
+    ("Rebuild a number someone quoted",
+     "Record each input by digest and keep the payloads. Later, <code>verify</code> rebuilds the "
+     "report, or says which input changed, went missing, or which rule moved the result.",
+     "unalloc report -D team --json --keep-inputs run/ > run.json\nunalloc verify run.json --inputs run/"),
 )
 
 
@@ -370,7 +374,7 @@ def landing() -> str:
     body = f"""<main>
 <div class="wrap hero">
   <div>
-    <span class="eyebrow">Open-source AI cost attribution · v0.2.3</span>
+    <span class="eyebrow">Open-source AI cost attribution · v0.3.0</span>
     <h1>Find the AI spend <em>nobody owns.</em></h1>
     <p class="lede"><code>unalloc</code> joins OpenCost Kubernetes allocations with LiteLLM, OpenAI and Anthropic bills into one exact ledger and reports how much of your AI spend has no owner. Six case studies, one of them on a real H100, show where that attribution breaks.</p>
     <div class="actions">
@@ -429,11 +433,11 @@ def landing() -> str:
   doi           = {{{ARXIV_DOI}}},
   url           = {{{ARXIV}}}
 }}</code></pre>
-  <p>To cite the software, cite the release. Every release is archived on Zenodo at <a href="https://doi.org/{DOI}">doi:{DOI}</a>, which resolves to the latest &mdash; currently 0.2.3, the code the paper describes.</p>
+  <p>To cite the software, cite the release. Every release is archived on Zenodo at <a href="https://doi.org/{DOI}">doi:{DOI}</a>, which resolves to the latest &mdash; currently 0.3.0. The paper describes 0.2.3; 0.3.0 adds result provenance and <code>unalloc verify</code> without changing any attribution result.</p>
   <pre><code>@software{{urista_unalloc_2026,
   author  = {{Urista, Timothy}},
   title   = {{unalloc: find the AI spend nobody owns}},
-  version = {{0.2.3}},
+  version = {{0.3.0}},
   year    = {{2026}},
   doi     = {{{DOI}}},
   url     = {{{REPO}}}

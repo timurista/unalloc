@@ -80,7 +80,7 @@
 <main>
 <div class="wrap hero">
   <div>
-    <span class="eyebrow">Open-source AI cost attribution · v0.2.3</span>
+    <span class="eyebrow">Open-source AI cost attribution · v0.3.0</span>
     <h1>Find the AI spend <em>nobody owns.</em></h1>
     <p class="lede"><code>unalloc</code> joins OpenCost Kubernetes allocations with LiteLLM, OpenAI and Anthropic bills into one exact ledger and reports how much of your AI spend has no owner. Six case studies, one of them on a real H100, show where that attribution breaks.</p>
     <div class="actions">
@@ -117,7 +117,8 @@
 
 <section class="band" id="use-cases"><div class="wrap">
   <header><span class="eyebrow">Use cases</span><h2>What to do with the joined ledger</h2></header>
-  <div class="uses"><div><h3>Fix the labels that matter</h3><p>Sort unowned spend by dollars. In the hybrid-org study three label changes took unallocated spend from 66.9% to 1.9%.</p><pre><code>unalloc labels --dimension team</code></pre></div><div><h3>Cost a feature end to end</h3><p>Join cluster and API rows on a <code>feature</code> label. A RAG answer cost <span class="money">$22.32</span> per 1k requests with its vector database, <span class="money">$13.38</span> counting the LLM bill alone.</p><pre><code>unalloc report --dimension feature</code></pre></div><div><h3>Decide build versus buy</h3><p>One self-hosted GPU beat a mid-tier API above about 0.23 requests/s and a small-tier API above about 1.7 requests/s in the simulation. Utilization decides it, not list price.</p><pre><code>python -m case_studies.use_cases</code></pre></div><div><h3>Gate deploys on ownership</h3><p>Fail CI when too much spend has no owner. Exit code 2 above the budget.</p><pre><code>unalloc report -D team --budget 10</code></pre></div></div>
+  <div class="uses"><div><h3>Fix the labels that matter</h3><p>Sort unowned spend by dollars. In the hybrid-org study three label changes took unallocated spend from 66.9% to 1.9%.</p><pre><code>unalloc labels --dimension team</code></pre></div><div><h3>Cost a feature end to end</h3><p>Join cluster and API rows on a <code>feature</code> label. A RAG answer cost <span class="money">$22.32</span> per 1k requests with its vector database, <span class="money">$13.38</span> counting the LLM bill alone.</p><pre><code>unalloc report --dimension feature</code></pre></div><div><h3>Decide build versus buy</h3><p>One self-hosted GPU beat a mid-tier API above about 0.23 requests/s and a small-tier API above about 1.7 requests/s in the simulation. Utilization decides it, not list price.</p><pre><code>python -m case_studies.use_cases</code></pre></div><div><h3>Gate deploys on ownership</h3><p>Fail CI when too much spend has no owner. Exit code 2 above the budget.</p><pre><code>unalloc report -D team --budget 10</code></pre></div><div><h3>Rebuild a number someone quoted</h3><p>Record each input by digest and keep the payloads. Later, <code>verify</code> rebuilds the report, or says which input changed, went missing, or which rule moved the result.</p><pre><code>unalloc report -D team --json --keep-inputs run/ &gt; run.json
+unalloc verify run.json --inputs run/</code></pre></div></div>
 </div></section>
 
 <section class="band" id="read"><div class="wrap">
@@ -149,11 +150,11 @@
   doi           = {10.48550/arXiv.2609.24991},
   url           = {https://arxiv.org/abs/2609.24991}
 }</code></pre>
-  <p>To cite the software, cite the release. Every release is archived on Zenodo at <a href="https://doi.org/10.5281/zenodo.22761012">doi:10.5281/zenodo.22761012</a>, which resolves to the latest &mdash; currently 0.2.3, the code the paper describes.</p>
+  <p>To cite the software, cite the release. Every release is archived on Zenodo at <a href="https://doi.org/10.5281/zenodo.22761012">doi:10.5281/zenodo.22761012</a>, which resolves to the latest &mdash; currently 0.3.0. The paper describes 0.2.3; 0.3.0 adds result provenance and <code>unalloc verify</code> without changing any attribution result.</p>
   <pre><code>@software{urista_unalloc_2026,
   author  = {Urista, Timothy},
   title   = {unalloc: find the AI spend nobody owns},
-  version = {0.2.3},
+  version = {0.3.0},
   year    = {2026},
   doi     = {10.5281/zenodo.22761012},
   url     = {https://github.com/timurista/unalloc}

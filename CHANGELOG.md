@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 — 2026-10-04
+
+### Added
+- `report --json` carries a `provenance` block: unalloc version, window (live runs), alias-table digest, one entry per requested source with its status, payload SHA-256, byte count and row count, and a digest of the result body.
+- `report --keep-inputs DIR` writes the exact payloads the run parsed, named like the bundled fixtures, so the run can be replayed without the network.
+- `unalloc verify RESULT --inputs DIR` rebuilds a report from retained inputs. Exit 0 when it reproduces; 3 when an input is missing or its bytes changed at the same path; 4 when the inputs match but the result does not, naming a version or alias-table change; 5 when the recorded result does not conserve its own total.
+- Every command warns on stderr when the ledger is partial, naming each source that failed or had no input.
+- `Source.fetch_payload()` returns the raw provider payload; `fetch()` is now `parse(fetch_payload())` on the base class.
+
+### Fixed
+- A failed live source was printed to stderr and then dropped, so `report --json` gave no sign that its percentage covered only some sources. It is now recorded as `failed` in the provenance block.
+- With `--fixtures` and a missing fixture file, the "skipping" notice went to stdout and made `report --json` output invalid JSON. It goes to stderr.
+
+Attribution results are unchanged: every fixture report from 0.2.3 reproduces exactly.
+
 ## 0.2.3 — 2026-09-21
 
 ### Fixed

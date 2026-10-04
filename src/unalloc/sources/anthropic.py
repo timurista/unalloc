@@ -27,7 +27,7 @@ class AnthropicSource(Source):
             headers["x-api-key"] = self.token
         return headers
 
-    def fetch(self, start: datetime, end: datetime) -> list[CostRow]:
+    def fetch_payload(self, start: datetime, end: datetime) -> Any:
         payload = self._get_pages(
             "/organizations/cost_report",
             params={
@@ -37,7 +37,7 @@ class AnthropicSource(Source):
                 "limit": 180,
             },
         )
-        return self.parse(payload)
+        return payload
 
     def parse(self, payload: Any) -> list[CostRow]:
         buckets = payload.get("data", []) if isinstance(payload, dict) else payload

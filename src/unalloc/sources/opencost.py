@@ -21,7 +21,7 @@ from unalloc.sources.base import Source, money, parse_ts
 class OpenCostSource(Source):
     name = "opencost"
 
-    def fetch(self, start: datetime, end: datetime) -> list[CostRow]:
+    def fetch_payload(self, start: datetime, end: datetime) -> Any:
         payload = self._get(
             "/allocation",
             params={
@@ -31,7 +31,7 @@ class OpenCostSource(Source):
                 "includeIdle": "true",
             },
         )
-        return self.parse(payload)
+        return payload
 
     def parse(self, payload: Any) -> list[CostRow]:
         rows: list[CostRow] = []
