@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1 — 2026-10-05
+
+### Documentation
+- Prominent source-overlap warning: the CLI defaults to all four sources and appends normalized rows without automatic economic deduplication. Source selection must account for both coverage and overlap.
+- Research summaries describe disagreement between allocation rules rather than established overcharging or mispricing. GPU queue claims are limited to no waiting observed at about 0.5-second telemetry sampling.
+- Synthetic billing and illustrative allocation pools, and the one-GPU/model/run-per-load limits, are explicit.
+
+Accounting behavior and source defaults are unchanged. This patch includes the corrected README in package metadata and distributions; provenance reports version 0.3.1.
+
 ## 0.3.0 — 2026-10-04
 
 ### Added
