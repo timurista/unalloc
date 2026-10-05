@@ -53,6 +53,10 @@ FIXTURE_FILES = {
     "anthropic": "anthropic_cost_report.json",
 }
 
+# What the providers billed for the fixture month, so `reconcile --fixtures`
+# has something to reconcile against without the reader inventing a number.
+FIXTURE_INVOICES = "invoices.json"
+
 ENV_URL = {
     "opencost": "UNALLOC_OPENCOST_URL",
     "litellm": "UNALLOC_LITELLM_URL",
@@ -65,6 +69,46 @@ ENV_TOKEN = {
     "openai": "OPENAI_ADMIN_KEY",
     "anthropic": "ANTHROPIC_ADMIN_KEY",
 }
+
+
+def _print_version(value: bool) -> None:
+    if value:
+        typer.echo(__version__)
+        raise typer.Exit()
+
+
+@app.callback()
+def _root(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-V",
+        callback=_print_version,
+        is_eager=True,
+        help="Print the installed version and exit.",
+    ),
+) -> None:
+    pass
+
+
+def _fixture_invoices(fixture_dir: Path) -> list[Invoice]:
+    path = fixture_dir / FIXTURE_INVOICES
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text())
+    period = data.get("period") or {}
+    start = datetime.fromisoformat(period["start"])
+    end = datetime.fromisoformat(period["end"])
+    return [
+        Invoice(
+            source=item["source"],
+            amount_usd=Decimal(str(item["amount_usd"])),
+            start=start,
+            end=end,
+            note=item.get("note", ""),
+        )
+        for item in data.get("invoices", [])
+    ]
 
 
 def _window(days: int) -> tuple[datetime, datetime]:
@@ -281,7 +325,8 @@ def reconcile_cmd(
         "--invoice",
         "-i",
         help="Billed total per source as SOURCE=AMOUNT, e.g. openai=4210.55. "
-        "Repeat the flag per source.",
+        "Repeat the flag per source. With --fixtures and no --invoice, the "
+        "bundled sample invoices are used.",
     ),
     tolerance: float = typer.Option(
         float(DEFAULT_TOLERANCE_PCT),
@@ -307,6 +352,8 @@ def reconcile_cmd(
                 end=end,
             )
         )
+    if fixtures and not invoice:
+        invoices = _fixture_invoices(fixture_dir)
 
     render.render_reconciliation(
         reconcile(rows, invoices, tolerance_pct=Decimal(str(tolerance)))

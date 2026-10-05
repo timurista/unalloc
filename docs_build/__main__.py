@@ -374,7 +374,7 @@ def landing() -> str:
     body = f"""<main>
 <div class="wrap hero">
   <div>
-    <span class="eyebrow">Open-source AI cost attribution · v0.3.1</span>
+    <span class="eyebrow">Open-source AI cost attribution · v0.3.2</span>
     <h1>Find the AI spend <em>nobody owns.</em></h1>
     <p class="lede"><code>unalloc</code> joins OpenCost Kubernetes allocations with LiteLLM, OpenAI and Anthropic bills into one exact ledger and reports how much of your AI spend has no owner. Six case studies, one of them on a real H100, show where that attribution breaks.</p>
     <div class="actions">
@@ -433,11 +433,11 @@ def landing() -> str:
   doi           = {{{ARXIV_DOI}}},
   url           = {{{ARXIV}}}
 }}</code></pre>
-  <p>To cite the software, cite the release. Every release is archived on Zenodo at <a href="https://doi.org/{DOI}">doi:{DOI}</a>, which resolves to the latest &mdash; currently 0.3.1. The paper describes 0.2.3; 0.3.0 adds result provenance and <code>unalloc verify</code> without changing any attribution result. 0.3.1 clarifies source overlap and research limitations in the documentation.</p>
+  <p>To cite the software, cite the release. Every release is archived on Zenodo at <a href="https://doi.org/{DOI}">doi:{DOI}</a>, which resolves to the latest &mdash; currently 0.3.2. The paper describes 0.2.3; 0.3.0 adds result provenance and <code>unalloc verify</code> without changing any attribution result. 0.3.1 clarifies source overlap and research limitations in the documentation, and 0.3.2 makes the bundled demo non-overlapping with sample invoices.</p>
   <pre><code>@software{{urista_unalloc_2026,
   author  = {{Urista, Timothy}},
   title   = {{unalloc: find the AI spend nobody owns}},
-  version = {{0.3.1}},
+  version = {{0.3.2}},
   year    = {{2026}},
   doi     = {{{DOI}}},
   url     = {{{REPO}}}

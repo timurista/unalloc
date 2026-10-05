@@ -13,7 +13,7 @@
 
 OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Getting both into one view is possible today — OpenCost has an OpenAI plugin — but the answer still depends on a join nobody checks: the same dollar can arrive through both your gateway and your provider bill, and the labels that say who owns it are set per workload, not per pod template. `unalloc` pulls all four sources into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team — and how much of the rest was only rescued by a fallback key.
 
-> **Avoid double counting before interpreting totals.** By default, the CLI requests all four sources: OpenCost, LiteLLM, OpenAI and Anthropic. It appends their normalized `CostRow`s into one ledger; it does **not** automatically deduplicate the same economic spend across sources. Gateway charges can also appear in provider bills (or OpenCost plugin output). Choose non-overlapping sources for your setup. For traffic fully covered by LiteLLM, use `--source opencost --source litellm` only if OpenCost excludes those same provider charges. Direct-provider-only traffic needs a separate coverage plan. Fixture totals below are synthetic demonstrations, not validated unique spend.
+> **Avoid double counting before interpreting totals.** By default, the CLI requests all four sources: OpenCost, LiteLLM, OpenAI and Anthropic. It appends their normalized `CostRow`s into one ledger; it does **not** automatically deduplicate the same economic spend across sources. Gateway charges can also appear in provider bills (or OpenCost plugin output). Choose non-overlapping sources for your setup. For traffic fully covered by LiteLLM, use `--source opencost --source litellm` only if OpenCost excludes those same provider charges. Direct-provider-only traffic needs a separate coverage plan. The bundled fixtures are built not to overlap: their LiteLLM rows route to Azure OpenAI, Vertex AI and Bedrock, which unalloc does not pull directly, and their OpenCost rows are self-hosted workloads only ([fixture notes](https://github.com/timurista/unalloc/blob/main/src/unalloc/fixtures/README.md)). Fixture totals are synthetic demonstrations, not validated unique spend.
 
 ## The output
 
@@ -46,11 +46,11 @@ $ unalloc labels --fixtures --dimension team
 ┡━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
 │  1 │ opencost │ inference/vllm-llama-70b  │ $19,147.10 │ cluster, controller, ...   │
 │  2 │ opencost │ __idle__                  │  $6,070.00 │ cluster                    │
-│  3 │ litellm  │ claude-opus-5             │  $5,412.75 │ environment, model         │
+│  3 │ litellm  │ bedrock/claude-opus-5     │  $5,412.75 │ environment, model         │
 └────┴──────────┴───────────────────────────┴────────────┴────────────────────────────┘
 ```
 
-`inference/vllm-llama-70b` is the whole pitch: $19K of GPU spend carrying a `costCenter` label but no `team`, sitting next to $5K of Claude API spend on an unlabeled legacy key. Two systems, one gap, no existing tool that shows them in the same table.
+`inference/vllm-llama-70b` is the whole pitch: $19K of GPU spend carrying a `costCenter` label but no `team`, sitting next to $5K of Claude spend routed through the gateway to Bedrock on an unlabeled legacy key. Two systems, one gap, no existing tool that shows them in the same table.
 
 Add a fallback and unalloc says how much of the "allocated" spend only got there through it, so a fallback onto something that is not an owner can't hide inside the headline:
 
@@ -61,11 +61,30 @@ $ unalloc report --fixtures -D team --fallback namespace
 │ $23,745.60 attributed only via fallback (namespace)              │
 ```
 
+Then check the ledger against what the providers billed. With `--fixtures`, the bundled sample invoices are used:
+
+```
+$ unalloc reconcile --fixtures
+┏━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Source    ┃     Ledger ┃   Invoice ┃            Delta ┃ Status     ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ anthropic │  $8,737.03 │ $8,779.84 │  $-42.81 (-0.5%) │ matched    │
+│ litellm   │ $11,444.27 │         — │                — │ no-invoice │
+│ openai    │  $4,031.36 │ $4,412.80 │ $-381.44 (-8.6%) │ under      │
+│ opencost  │ $42,417.72 │         — │                — │ no-invoice │
+└───────────┴────────────┴───────────┴──────────────────┴────────────┘
+The ledger does not tie out. Attribution built on this is not defensible yet.
+```
+
+Anthropic agrees within the 1% tolerance. OpenAI billed $381 more than its costs endpoint reported, so any attribution built on that ledger understates OpenAI spend until the gap is explained.
+
 ## Install
 
 ```bash
-pip install unalloc          # or: uv tool install unalloc
-unalloc report --fixtures    # works immediately, no infrastructure needed
+pip install unalloc                               # or: uv tool install unalloc
+unalloc report --fixtures --fallback cost_center  # works immediately, no infrastructure needed
+unalloc reconcile --fixtures                      # ledger vs. sample invoices
+unalloc --version
 ```
 
 From a clone:
@@ -79,11 +98,11 @@ make check    # ruff + pytest, same as CI
 Or as a container, which needs no Python on the host:
 
 ```bash
-docker build -t unalloc:0.2.0 .
-docker run --rm unalloc:0.2.0 report --fixtures -D team
+docker build -t unalloc .
+docker run --rm unalloc report --fixtures -D team
 
 # against real systems, reachable from the container
-docker run --rm --network host --env-file .env unalloc:0.2.0 report -D team
+docker run --rm --network host --env-file .env unalloc report -D team
 ```
 
 Copy `.env.example` to `.env` for the source configuration. unalloc stores

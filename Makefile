@@ -16,7 +16,7 @@ dev:                 ## Editable install with test and lint tooling
 demo:                ## Run all three commands against bundled fixtures
 	unalloc report --fixtures --dimension team
 	unalloc labels --fixtures --dimension team --limit 5
-	unalloc reconcile --fixtures --invoice openai=4031.36
+	unalloc reconcile --fixtures
 
 lint:                ## Ruff
 	ruff check .

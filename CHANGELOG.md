@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.2 — 2026-10-05
+
+### Added
+- `unalloc --version` (and `-V`), alongside the existing `unalloc version` command.
+- `reconcile --fixtures` reconciles against bundled sample invoices when no `--invoice` is given: Anthropic ties out within tolerance and OpenAI shows an $381.44 (8.6%) gap, so the invoice check can be demoed without inventing a number. An explicit `--invoice` replaces the bundled ones.
+
+### Changed
+- The bundled LiteLLM fixture now routes to Azure OpenAI, Vertex AI and Bedrock instead of the OpenAI and Anthropic APIs, so the default four-source demo no longer counts gateway spend that the direct provider fixtures could also bill. Dollar amounts are unchanged: the fixture headline is still 73.5% of $66,630.38. `src/unalloc/fixtures/README.md` documents what each fixture covers.
+- The quick start shows `--fallback cost_center` and `reconcile --fixtures`; `make demo` uses the bundled invoices.
+
+Fixture attribution results are unchanged. The LiteLLM fixture bytes changed, so its provenance digest differs from 0.3.1.
+
 ## 0.3.1 — 2026-10-05
 
 ### Documentation

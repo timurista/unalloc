@@ -1,0 +1,7 @@
+{
+  "period": {"start": "2026-08-01T00:00:00Z", "end": "2026-09-01T00:00:00Z"},
+  "invoices": [
+    {"source": "anthropic", "amount_usd": "8779.84", "note": "August invoice; within rounding of the cost report"},
+    {"source": "openai", "amount_usd": "4412.80", "note": "August invoice; $381.44 more than the costs endpoint returned"}
+  ]
+}
