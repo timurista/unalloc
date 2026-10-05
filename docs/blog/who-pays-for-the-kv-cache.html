@@ -50,7 +50,7 @@ unalloc report --fixtures --dimension team
 <p><img alt="The same trace, split seven ways" src="../assets/figures/torch_shares.png" /></p>
 <p>Count tokens, which is what a gateway does, and search pays <strong>45%</strong> of the pod. Measure the compute the requests actually used and search pays <strong>12%</strong>. Prefill is batched and cheap; decode is sequential and expensive. Search sent 18,024 prompt tokens and got 701 back, while agents sent 2,345 and got 4,017 back.</p>
 <blockquote>
-<p>Per-token showback over-charged the RAG team by <strong>33 percentage points</strong> of the bill, $5,703 a month, relative to measured compute. Pricing output tokens at 4× input, like API list prices do, halves the gap. It doesn't close it.</p>
+<p>Per-token and measured-compute allocation rules differed for the RAG team by <strong>33 percentage points</strong> of an illustrative monthly pool ($5,703), with measured compute as the comparison rule. Pricing output tokens at 4× input, like API list prices do, halves the gap. It doesn't close it.</p>
 </blockquote>
 <p>The size of that gap is specific to my hardware; I ran this on a CPU, where per-step overhead is large. The direction is structural: under token pricing, prompt-heavy workloads subsidize decode-heavy ones.</p>
 <h2 id="experiment-2-a-shared-vllm-pod-simulated">Experiment 2: a shared vLLM pod, simulated</h2>
@@ -100,7 +100,7 @@ unalloc report --fixtures --dimension team
 <li><strong>Test your cost tooling against live APIs</strong>, not just fixtures. Every fetch-path bug I found passed the unit tests.</li>
 </ol>
 <h2 id="caveats">Caveats</h2>
-<p>The PyTorch timings are from a CPU, so the magnitudes aren't GPU numbers, though the directions are structural. <strong>Update:</strong> I've since re-run the metering experiment with real vLLM on an NVIDIA H100, and the finding held: token metering over-charged the RAG tenant by 12–14 points. The <a href="gpu-validation.html">GPU addendum</a> has the specs, the numbers and the terminal captures. The serving simulator uses an analytic latency model. Workloads are synthetic, and prices are round and illustrative.</p>
+<p>The PyTorch timings are from a CPU, so the magnitudes aren't GPU numbers, though the directions are structural. <strong>Update:</strong> I've since re-run the metering experiment with real vLLM on an NVIDIA H100, and the finding held: token and equal time-share allocation rules differed for the RAG tenant by 12–14 points. The <a href="gpu-validation.html">GPU addendum</a> has the specs, the numbers and the terminal captures. The serving simulator uses an analytic latency model. Workloads are synthetic, and prices are round and illustrative.</p>
 <h2 id="try-it">Try it</h2>
 <p>Everything, from studies to figures to the paper, regenerates from the repo:</p>
 <pre><code class="language-bash">git clone https://github.com/timurista/unalloc &amp;&amp; cd unalloc

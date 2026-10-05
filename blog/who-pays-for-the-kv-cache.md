@@ -53,7 +53,7 @@ Then I split one month of the pod's GPU bill ($17,280 for 8 GPUs) seven differen
 
 Count tokens, which is what a gateway does, and search pays **45%** of the pod. Measure the compute the requests actually used and search pays **12%**. Prefill is batched and cheap; decode is sequential and expensive. Search sent 18,024 prompt tokens and got 701 back, while agents sent 2,345 and got 4,017 back.
 
-> Per-token showback over-charged the RAG team by **33 percentage points** of the bill, $5,703 a month, relative to measured compute. Pricing output tokens at 4× input, like API list prices do, halves the gap. It doesn't close it.
+> Per-token and measured-compute allocation rules differed for the RAG team by **33 percentage points** of an illustrative monthly pool ($5,703), with measured compute as the comparison rule. Pricing output tokens at 4× input, like API list prices do, halves the gap. It doesn't close it.
 
 The size of that gap is specific to my hardware; I ran this on a CPU, where per-step overhead is large. The direction is structural: under token pricing, prompt-heavy workloads subsidize decode-heavy ones.
 
@@ -119,7 +119,7 @@ Finally I ran the actual CLI as a subprocess against mock OpenCost, LiteLLM, Ope
 
 ## Caveats
 
-The PyTorch timings are from a CPU, so the magnitudes aren't GPU numbers, though the directions are structural. **Update:** I've since re-run the metering experiment with real vLLM on an NVIDIA H100, and the finding held: token metering over-charged the RAG tenant by 12–14 points. The [GPU addendum](addendum-gpu-validation.md) has the specs, the numbers and the terminal captures. The serving simulator uses an analytic latency model. Workloads are synthetic, and prices are round and illustrative.
+The PyTorch timings are from a CPU, so the magnitudes aren't GPU numbers, though the directions are structural. **Update:** I've since re-run the metering experiment with real vLLM on an NVIDIA H100, and the finding held: token and equal time-share allocation rules differed for the RAG tenant by 12–14 points. The [GPU addendum](addendum-gpu-validation.md) has the specs, the numbers and the terminal captures. The serving simulator uses an analytic latency model. Workloads are synthetic, and prices are round and illustrative.
 
 ## Try it
 

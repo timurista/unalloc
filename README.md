@@ -13,6 +13,8 @@
 
 OpenCost tells you what your Kubernetes workloads cost. Your provider dashboard tells you what your OpenAI and Anthropic calls cost. Getting both into one view is possible today — OpenCost has an OpenAI plugin — but the answer still depends on a join nobody checks: the same dollar can arrive through both your gateway and your provider bill, and the labels that say who owns it are set per workload, not per pod template. `unalloc` pulls all four sources into one normalized ledger, joins them on a label dimension you choose, and reports the number your finance team keeps asking for: how much of this month's AI spend can't be attributed to any team — and how much of the rest was only rescued by a fallback key.
 
+> **Avoid double counting before interpreting totals.** By default, the CLI requests all four sources: OpenCost, LiteLLM, OpenAI and Anthropic. It appends their normalized `CostRow`s into one ledger; it does **not** automatically deduplicate the same economic spend across sources. Gateway charges can also appear in provider bills (or OpenCost plugin output). Choose non-overlapping sources for your setup. For traffic fully covered by LiteLLM, use `--source opencost --source litellm` only if OpenCost excludes those same provider charges. Direct-provider-only traffic needs a separate coverage plan. Fixture totals below are synthetic demonstrations, not validated unique spend.
+
 ## The output
 
 ```
@@ -123,7 +125,9 @@ Configure sources by environment variable:
 | `ANTHROPIC_ADMIN_KEY` | Anthropic org admin key (cost report endpoint, sent as `x-api-key`) |
 | `UNALLOC_OPENAI_URL`, `UNALLOC_ANTHROPIC_URL` | Optional overrides for the public API roots, e.g. a proxy |
 
-Restrict the run with `--source` to avoid double counting: if your traffic goes through LiteLLM, prefer `--source opencost --source litellm` and skip the direct provider adapters, since the same tokens appear in both. The [end-to-end case study](#case-studies-and-paper) measures exactly how much that costs you if you forget.
+Restrict the run with `--source` to avoid double counting: if LiteLLM covers all provider traffic and OpenCost excludes overlapping provider charges, use `--source opencost --source litellm` and skip the direct provider adapters. Confirm coverage and overlap for your setup. The [end-to-end case study](#case-studies-and-paper) demonstrates the resulting double count with synthetic billing and invoices; it does not measure customer savings.
+
+The case-study invoices and monthly cost pools are synthetic or illustrative. The GPU result covers one H100, one model and one two-minute run per load; waiting-request telemetry was sampled about every 0.5 seconds. Allocation-rule disagreement does not establish a uniquely correct charge or production savings.
 
 ## Reproducing a result
 
@@ -192,11 +196,11 @@ Six studies push real (or realistically simulated) inference workloads through u
 | Study | What runs | Headline |
 | --- | --- | --- |
 | [`kv_cache`](https://github.com/timurista/unalloc/blob/main/case_studies/kv_cache) | Discrete-event vLLM-style engine: paged KV blocks, prefix caching, continuous batching, preemption | Step-time metering shows ~0% idle once any request is in flight; KV-memory metering leaves a large share of the bill unowned |
-| [`torch_kv`](https://github.com/timurista/unalloc/blob/main/case_studies/torch_kv) | A from-scratch PyTorch decoder with a real KV cache serving a 4-tenant trace | Per-token showback over-charges a RAG tenant by 33 points of the pool ($5.7K/month) vs measured compute |
+| [`torch_kv`](https://github.com/timurista/unalloc/blob/main/case_studies/torch_kv) | A from-scratch PyTorch decoder with a real KV cache serving a 4-tenant trace | Token and measured-compute allocation rules differ by 33 points for a RAG tenant ($5.7K of an illustrative monthly pool) |
 | [`distributed`](https://github.com/timurista/unalloc/blob/main/case_studies/distributed) | Tensor and pipeline parallel on `torch.distributed` (gloo), verified against a single-process reference | Owner label on LeaderWorkerSet leaders only: 66% unallocated; falling back to `name` "fixes" it by sending 61% to a Helm chart name |
 | [`hybrid_e2e`](https://github.com/timurista/unalloc/blob/main/case_studies/hybrid_e2e) | The real CLI as a subprocess against live mock OpenCost / LiteLLM / OpenAI / Anthropic APIs (Postgres-backed LiteLLM in the dev container) | Enabling every source double counts $11.8K; reading only page one of the billing APIs reports 25% of spend |
 | [`use_cases`](https://github.com/timurista/unalloc/blob/main/case_studies/use_cases) | Labeling Pareto, per-feature unit economics, self-host break-even, CI budget gate | Three label fixes take a 67%-unallocated org under 10% |
-| [`gpu_validation`](https://github.com/timurista/unalloc/blob/main/case_studies/gpu_validation) | Real vLLM 0.29 serving Qwen2.5-7B on a DigitalOcean H100, driven with the simulator's tenants ([runbook](https://github.com/timurista/unalloc/blob/main/case_studies/gpu_validation/RUNBOOK.md), [evidence](https://github.com/timurista/unalloc/tree/main/case_studies/results/gpu_validation/evidence)) | Token metering over-charges search by 12–14 points vs time share; GPU "utilization" reads 97% at 2 req/s and 99% at 16 req/s |
+| [`gpu_validation`](https://github.com/timurista/unalloc/blob/main/case_studies/gpu_validation) | Real vLLM 0.29 serving Qwen2.5-7B on a DigitalOcean H100, driven with the simulator's tenants ([runbook](https://github.com/timurista/unalloc/blob/main/case_studies/gpu_validation/RUNBOOK.md), [evidence](https://github.com/timurista/unalloc/tree/main/case_studies/results/gpu_validation/evidence)) | Token and equal time-share allocation rules differ by 12–14 points for search; GPU "utilization" reads 97% at 2 req/s and 99% at 16 req/s |
 
 ```bash
 make research            # build ./.venv-research: CPU torch, notebook tooling, typst

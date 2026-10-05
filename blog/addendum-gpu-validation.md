@@ -6,10 +6,10 @@
 
 ## TL;DR
 
-- **The main finding holds on real hardware.** On an NVIDIA H100 running vLLM, token-based showback charged the RAG tenant **12–14 percentage points** more of the bill than its measured share of serving time, at every load I tested.
+- **Allocation rules disagree on real hardware.** On an NVIDIA H100 running vLLM, token-based showback charged the RAG tenant **12–14 percentage points** more of an illustrative cost pool than an equal time-share rule across in-flight requests, at every load I tested.
 - **GPU "utilization" is not a cost signal.** `nvidia-smi` reported **97% utilization at 2 requests/s and 99% at 16 requests/s**, while throughput rose 7×. Power draw was the honest signal: 469 W → 660 W.
-- **Latency stayed low.** Median time to first token was 26–51 ms and median time per output token 6.3–12.2 ms, even at 16 requests/s with no requests queued.
-- **My simulator was too pessimistic.** Its latency model saturates at 8 requests/s; the real H100 never queued a request at 16. The attribution *shares* still agreed in direction, but the simulator needs calibrating.
+- **Latency stayed low.** Median time to first token was 26–51 ms and median time per output token 6.3–12.2 ms, even at 16 requests/s; no waiting requests were observed in telemetry sampled about every 0.5 seconds.
+- **My simulator was too pessimistic.** Its latency model saturates at 8 requests/s; no waiting requests were observed on the real H100 at 16 requests/s in telemetry sampled about every 0.5 seconds. The attribution *shares* still agreed in direction, but the simulator needs calibrating.
 - **The whole run cost about $2.15**: 29 minutes of a $4.41/hour DigitalOcean GPU Droplet.
 
 ## The machine
@@ -52,7 +52,7 @@ After a 10-second warm-up that would abort on any error, the client ran two minu
 
 ![H100 latency and search's share of the bill](../paper/figures/gpu_validation.png)
 
-### 1. Token metering still mis-prices the RAG tenant
+### 1. Token and equal time-share allocation rules disagree for the RAG tenant
 
 I computed the same meters as in the main post, this time from real telemetry: token counts from the server's usage block, and a time-share meter that splits every 50 ms of wall time equally across in-flight requests.
 
@@ -73,7 +73,7 @@ If your chargeback divides a GPU bill by "utilization", a pod serving 773 tokens
 
 ### 3. Where the simulator was wrong
 
-The simulator's step-latency constants were set by hand for an 8B model on an H100. Against the real engine it matched throughput below saturation (737 vs 773 output tokens/s at 2 requests/s), but it saturates at 8 requests/s, with multi-second time to first token, while the real server handled 16 requests/s with nothing queued. The model also differs: Qwen2.5-7B's grouped-query attention stores about 57 KB of KV per token against the simulator's 131 KB. Calibrating the simulator's constants from this run is the obvious next step. Until then, trust its *shares*, not its latency.
+The simulator's step-latency constants were set by hand for an 8B model on an H100. Against the real engine it matched throughput below saturation (737 vs 773 output tokens/s at 2 requests/s), but it saturates at 8 requests/s, with multi-second time to first token, while the real server handled 16 requests/s with no waiting requests observed at about 0.5-second sampling resolution. The model also differs: Qwen2.5-7B's grouped-query attention stores about 57 KB of KV per token against the simulator's 131 KB. Calibrating the simulator's constants from this run is the obvious next step. The observed share differences support a comparison of allocation rules; they do not validate the simulator as a predictor of fair charges or latency.
 
 ## How I brought it up, verified it, and tore it down
 
@@ -97,8 +97,9 @@ Two things went wrong, and both are in the evidence rather than edited out:
 ## Caveats
 
 - One GPU and one model, with a two-minute window per load level and a single run each.
-- The time-share meter splits wall time across in-flight requests, including any queueing. The server reported zero waiting requests throughout, so here that is serving time.
+- The time-share meter splits wall time across in-flight requests, including any queueing. The server reported zero waiting requests in the collected samples, about 0.5 seconds apart. Shorter waits could have been missed; this meter is not a measurement of exclusive GPU compute or a uniquely correct charge.
 - Multi-turn prompts append synthetic assistant tokens rather than the model's actual output, so prefix reuse across turns covers the previous prompt but not the previous answer.
+- Workloads are synthetic; attributed billing pools are illustrative. This is not evidence of production or customer savings.
 - Prices are DigitalOcean's on-demand list prices on the day of the run.
 
 ## Reproduce it
