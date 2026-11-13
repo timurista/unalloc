@@ -1,0 +1,178 @@
+{
+  "schema": "unalloc.case_studies.environment_lifetime.result/v1",
+  "scope": "Offline synthetic arithmetic. Not validated AWS ingestion, not an AWS bill, not CPU billing. No prices, no dollar amounts.",
+  "synthetic": true,
+  "telemetry_complete": true,
+  "residual_label": "idle_by_complete_synthetic_fixture",
+  "units": {
+    "time": "seconds",
+    "memory": "GB (synthetic constant capacity)",
+    "allocation": "GB-seconds"
+  },
+  "totals": {
+    "environment_count": 3,
+    "request_count": 8,
+    "raw_request_seconds": "165",
+    "union_busy_seconds": "120",
+    "uncovered_seconds": "70",
+    "lifetime_seconds": "190",
+    "lifetime_gb_seconds": "270",
+    "allocated_gb_seconds": "120",
+    "residual_gb_seconds": "150",
+    "reconciliation": {
+      "identity": "allocated_gb_seconds + residual_gb_seconds == lifetime_gb_seconds",
+      "allocated_plus_residual_gb_seconds": "270",
+      "lifetime_gb_seconds": "270",
+      "difference_gb_seconds": "0",
+      "exact": true
+    }
+  },
+  "environments": [
+    {
+      "id": "env-a",
+      "memory_gb": "1.5",
+      "lifetime_start_s": "0",
+      "lifetime_end_s": "100",
+      "request_count": 5,
+      "max_concurrency": 3,
+      "raw_request_seconds": "85",
+      "union_busy_seconds": "60",
+      "overlap_seconds": "25",
+      "uncovered_seconds": "40",
+      "lifetime_seconds": "100",
+      "lifetime_gb_seconds": "150",
+      "allocated_gb_seconds": "90",
+      "residual_gb_seconds": "60",
+      "residual_label": "idle_by_complete_synthetic_fixture",
+      "reconciliation": {
+        "identity": "allocated_gb_seconds + residual_gb_seconds == lifetime_gb_seconds",
+        "allocated_plus_residual_gb_seconds": "150",
+        "lifetime_gb_seconds": "150",
+        "difference_gb_seconds": "0",
+        "exact": true
+      }
+    },
+    {
+      "id": "env-b",
+      "memory_gb": "0.5",
+      "lifetime_start_s": "5",
+      "lifetime_end_s": "65",
+      "request_count": 3,
+      "max_concurrency": 3,
+      "raw_request_seconds": "80",
+      "union_busy_seconds": "60",
+      "overlap_seconds": "20",
+      "uncovered_seconds": "0",
+      "lifetime_seconds": "60",
+      "lifetime_gb_seconds": "30",
+      "allocated_gb_seconds": "30",
+      "residual_gb_seconds": "0",
+      "residual_label": "idle_by_complete_synthetic_fixture",
+      "reconciliation": {
+        "identity": "allocated_gb_seconds + residual_gb_seconds == lifetime_gb_seconds",
+        "allocated_plus_residual_gb_seconds": "30",
+        "lifetime_gb_seconds": "30",
+        "difference_gb_seconds": "0",
+        "exact": true
+      }
+    },
+    {
+      "id": "env-c",
+      "memory_gb": "3",
+      "lifetime_start_s": "0",
+      "lifetime_end_s": "30",
+      "request_count": 0,
+      "max_concurrency": 0,
+      "raw_request_seconds": "0",
+      "union_busy_seconds": "0",
+      "overlap_seconds": "0",
+      "uncovered_seconds": "30",
+      "lifetime_seconds": "30",
+      "lifetime_gb_seconds": "90",
+      "allocated_gb_seconds": "0",
+      "residual_gb_seconds": "90",
+      "residual_label": "idle_by_complete_synthetic_fixture",
+      "reconciliation": {
+        "identity": "allocated_gb_seconds + residual_gb_seconds == lifetime_gb_seconds",
+        "allocated_plus_residual_gb_seconds": "90",
+        "lifetime_gb_seconds": "90",
+        "difference_gb_seconds": "0",
+        "exact": true
+      }
+    }
+  ],
+  "requests": [
+    {
+      "id": "a-1",
+      "environment": "env-a",
+      "start_s": "10",
+      "end_s": "40",
+      "duration_seconds": "30",
+      "zero_duration": false,
+      "allocated_gb_seconds": "28.75"
+    },
+    {
+      "id": "a-2",
+      "environment": "env-a",
+      "start_s": "20",
+      "end_s": "50",
+      "duration_seconds": "30",
+      "zero_duration": false,
+      "allocated_gb_seconds": "28.75"
+    },
+    {
+      "id": "a-3",
+      "environment": "env-a",
+      "start_s": "30",
+      "end_s": "35",
+      "duration_seconds": "5",
+      "zero_duration": false,
+      "allocated_gb_seconds": "2.5"
+    },
+    {
+      "id": "a-4",
+      "environment": "env-a",
+      "start_s": "60",
+      "end_s": "60",
+      "duration_seconds": "0",
+      "zero_duration": true,
+      "allocated_gb_seconds": "0"
+    },
+    {
+      "id": "a-5",
+      "environment": "env-a",
+      "start_s": "70",
+      "end_s": "90",
+      "duration_seconds": "20",
+      "zero_duration": false,
+      "allocated_gb_seconds": "30"
+    },
+    {
+      "id": "b-1",
+      "environment": "env-b",
+      "start_s": "5",
+      "end_s": "65",
+      "duration_seconds": "60",
+      "zero_duration": false,
+      "allocated_gb_seconds": "155/6"
+    },
+    {
+      "id": "b-2",
+      "environment": "env-b",
+      "start_s": "15",
+      "end_s": "25",
+      "duration_seconds": "10",
+      "zero_duration": false,
+      "allocated_gb_seconds": "25/12"
+    },
+    {
+      "id": "b-3",
+      "environment": "env-b",
+      "start_s": "20",
+      "end_s": "30",
+      "duration_seconds": "10",
+      "zero_duration": false,
+      "allocated_gb_seconds": "25/12"
+    }
+  ]
+}

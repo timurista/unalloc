@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3 — 2026-11-13
+
+### Added
+- Repository-only synthetic environment-lifetime memory allocation case study: per-environment overlap handling, exact equal-share allocation, explicit uncovered residual, and missing-telemetry comparison.
+- 43 focused tests and reproducible output checks in CI. The synthetic fixture reconciles 270 GB-seconds as 120 assigned plus 150 residual; omitting a request still reconciles, illustrating why conservation does not prove correct attribution.
+
+No production CLI or source-adapter behavior changes. This is not AWS ingestion, an observed AWS bill, CPU billing, or a savings claim. The case study lives in the GitHub source tree and source archive, not the PyPI wheel/sdist. The package patch includes updated README metadata and version identity.
+
 ## 0.3.2 — 2026-10-05
 
 ### Added

@@ -47,3 +47,8 @@ jobs:
         run: python -m case_studies.hybrid_e2e --quick --out .cache/quick/hybrid_e2e
       - name: Use cases
         run: python -m case_studies.use_cases --quick --out .cache/quick/use_cases
+      - name: Environment-lifetime synthetic allocation
+        run: |
+          python -m unittest discover -s case_studies/environment_lifetime -t . -v
+          python -m case_studies.environment_lifetime --check case_studies/environment_lifetime/fixture_output.json
+          python -m case_studies.environment_lifetime --drop-request a-2 --check case_studies/environment_lifetime/fixture_output_missing_a-2.json

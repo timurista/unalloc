@@ -78,6 +78,21 @@ The ledger does not tie out. Attribution built on this is not defensible yet.
 
 Anthropic agrees within the 1% tolerance. OpenAI billed $381 more than its costs endpoint reported, so any attribution built on that ledger understates OpenAI spend until the gap is explained.
 
+## Environment-lifetime accounting example
+
+A new [repository-only case study](case_studies/environment_lifetime/README.md) separates
+summed request duration from environment-lifetime memory in a synthetic, offline fixture.
+It splits overlapping requests within each environment, preserves uncovered capacity as a
+residual, and shows that missing request telemetry can change attribution while totals still
+reconcile exactly. Equal sharing and constant memory are explicit modeling choices, not
+measured AWS ownership. No AWS ingestion, pricing, savings, or production CLI integration
+is claimed. Clone the repository to run it; case studies are not installed by `pip install unalloc`.
+
+```bash
+python3 -m case_studies.environment_lifetime
+python3 -m unittest discover -s case_studies/environment_lifetime -t . -v
+```
+
 ## Install
 
 ```bash
